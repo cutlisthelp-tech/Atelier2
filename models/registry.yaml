@@ -1,0 +1,24 @@
+# Model registry — docs/BUILD_PLAN.md §4.
+#
+# Every model used anywhere in Atelier (on-device or backend) is tracked here
+# with real, verified metadata. No placeholder values: an entry exists only
+# once its fields have been checked against the model's actual repository.
+#
+# Required fields per entry:
+#   name      — model identifier
+#   github    — source repository URL
+#   revision  — exact commit/tag verified
+#   license   — SPDX identifier as published by the authors
+#   weights   — real download URL for the weights
+#   checksum  — SHA-256 of the downloaded weight file
+#   runtime   — e.g. mediapipe, onnx, tflite, pytorch
+#   task      — e.g. pose_landmarks, face_landmarks, embedding, vton
+#   hardware  — e.g. cpu, gpu
+#   installed — true only after Download → Verify → Install completed
+#   tested    — true only after a real inference ran successfully
+#   notes     — anything a future maintainer must know
+#
+# Phase 0: no models are integrated yet, so this registry is intentionally
+# empty. The Diagnostics screen reports this honestly as "no models
+# registered" rather than implying anything is READY.
+models: []
