@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:atelier/app.dart';
+import 'package:atelier/models/model_registry.dart';
+import 'package:atelier/services/model_manager.dart';
 import 'package:flutter/material.dart' show Size;
 import 'package:flutter_test/flutter_test.dart';
 
@@ -37,7 +41,13 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    await tester.pumpWidget(const AtelierApp());
+    // Seed the manager from the canonical registry file so this test is
+    // deterministic regardless of asset-bundle timing in the fake-async zone.
+    final registry = ModelRegistry.parse(
+      File('../models/registry.yaml').readAsStringSync(),
+    );
+
+    await tester.pumpWidget(AtelierApp(modelManager: ModelManager(seed: registry)));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.text('PROFILE'));
@@ -47,8 +57,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
 
-    expect(find.text('No models registered.'), findsOneWidget);
-    expect(find.text('Backend URL not configured.'), findsOneWidget);
+    expect(find.text('pose_landmarker_full'), findsOneWidget);
+    expect(find.text('face_landmarker'), findsOneWidget);
+    // Stated twice, honestly: the health probe and the backend-models probe.
+    expect(find.text('Backend URL not configured.'), findsNWidgets(2));
     expect(find.text('FEATURE_AUTH'), findsOneWidget);
     expect(find.text('false'), findsNWidgets(4));
   });

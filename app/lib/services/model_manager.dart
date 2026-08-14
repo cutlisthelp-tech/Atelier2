@@ -20,14 +20,21 @@ class ModelStatus {
 class ModelManager {
   static const registryAssetPath = 'assets/models/registry.yaml';
 
-  ModelRegistry _registry = const ModelRegistry([]);
+  ModelManager({ModelRegistry? seed})
+      : _registry = seed ?? const ModelRegistry([]);
+
+  ModelRegistry _registry;
 
   ModelRegistry get registry => _registry;
   bool get hasModels => !_registry.isEmpty;
 
   Future<void> discover() async {
-    final text = await rootBundle.loadString(registryAssetPath);
-    _registry = ModelRegistry.parse(text);
+    try {
+      final text = await rootBundle.loadString(registryAssetPath);
+      _registry = ModelRegistry.parse(text);
+    } catch (_) {
+      // Keep whatever was seeded/known; the report stays honest about it.
+    }
   }
 
   /// Report — the only fully implemented stage in Phase 0.

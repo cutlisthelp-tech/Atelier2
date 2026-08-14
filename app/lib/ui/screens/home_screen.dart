@@ -10,9 +10,9 @@ class HomeScreen extends StatelessWidget {
     return const EmptyState(
       title: 'Your best look appears here.',
       message:
-          'Atelier hasn\'t met you yet. Once body scanning ships, this is '
-          'where your top outfit for the day lands — scored for your '
-          'proportions, your colors, your occasion, your weather.',
+          'Atelier hasn\'t met you yet. Start with a body scan in Profile — '
+          'once it knows your proportions and colors, this is where your top '
+          'outfit for the day lands, scored for your occasion and weather.',
     );
   }
 }

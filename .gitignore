@@ -12,6 +12,7 @@
 # Model weights / caches
 models/weights/
 **/model_cache/
+backend/.model_cache/
 
 # Python
 backend/.venv/

@@ -17,8 +17,41 @@
 #   installed — true only after Download → Verify → Install completed
 #   tested    — true only after a real inference ran successfully
 #   notes     — anything a future maintainer must know
-#
-# Phase 0: no models are integrated yet, so this registry is intentionally
-# empty. The Diagnostics screen reports this honestly as "no models
-# registered" rather than implying anything is READY.
-models: []
+models:
+  - name: pose_landmarker_full
+    github: https://github.com/google-ai-edge/mediapipe
+    revision: float16/latest (published via gs://mediapipe-models/pose_landmarker)
+    license: Apache-2.0
+    weights: https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task
+    checksum: 4eaa5eb7a98365221087693fcc286334cf0858e2eb6e15b506aa4a7ecdcec4ad
+    runtime: mediapipe
+    task: pose_landmarks
+    hardware: cpu
+    installed: true
+    tested: true
+    notes: >-
+      33-point body skeleton, IMAGE mode, num_poses=2 so a second detected
+      person becomes an honest MULTIPLE_PEOPLE failure instead of a silent
+      pick. Downloaded 2026-08-14 and SHA-256 verified by the backend
+      ModelManager into backend/.model_cache/ (gitignored). Tested Phase 1
+      against real CC0 fixture photos. Weights served under the model assets
+      terms of google-ai-edge/mediapipe (Apache-2.0).
+  - name: face_landmarker
+    github: https://github.com/google-ai-edge/mediapipe
+    revision: float16/latest (published via gs://mediapipe-models/face_landmarker)
+    license: Apache-2.0
+    weights: https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task
+    checksum: 64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff
+    runtime: mediapipe
+    task: face_landmarks
+    hardware: cpu
+    installed: true
+    tested: true
+    notes: >-
+      478-point face mesh including iris landmarks (468/473), IMAGE mode,
+      num_faces=2 so a second face becomes MULTIPLE_PEOPLE. Downloaded
+      2026-08-14 and SHA-256 verified by the backend ModelManager. Tested
+      Phase 1 against a real CC0 portrait fixture.
+# Deferred: person segmentation. No Phase 1 consumer needs it; it enters the
+# registry with the same verification lifecycle when Wardrobe/Try-On does.
+# Recorded in docs/MODEL_SETUP.md.

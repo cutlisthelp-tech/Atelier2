@@ -4,10 +4,22 @@ import 'package:atelier/models/model_registry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('canonical registry parses and is intentionally empty in Phase 0', () {
+  test('canonical registry parses with the two Phase 1 models', () {
     final text = File('../models/registry.yaml').readAsStringSync();
     final registry = ModelRegistry.parse(text);
-    expect(registry.isEmpty, isTrue);
+    final byName = {for (final m in registry.models) m.name: m};
+    expect(byName.keys, containsAll(['pose_landmarker_full', 'face_landmarker']));
+    // Real checksums computed from the actual downloads (2026-08-14).
+    expect(
+      byName['pose_landmarker_full']!.checksum,
+      '4eaa5eb7a98365221087693fcc286334cf0858e2eb6e15b506aa4a7ecdcec4ad',
+    );
+    expect(
+      byName['face_landmarker']!.checksum,
+      '64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff',
+    );
+    expect(byName['pose_landmarker_full']!.installed, isTrue);
+    expect(byName['face_landmarker']!.installed, isTrue);
   });
 
   test('a complete entry parses', () {

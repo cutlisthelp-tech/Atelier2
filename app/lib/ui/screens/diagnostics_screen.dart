@@ -5,15 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../../config/feature_flags.dart';
+import '../../services/backend_client.dart';
 import '../../services/model_manager.dart';
 import '../../theme/tokens.dart';
 
 /// Developer/QA screen — docs/DESIGN_SYSTEM.md §5.
 /// Every value is real; anything unavailable is stated plainly.
 class DiagnosticsScreen extends StatefulWidget {
-  const DiagnosticsScreen({super.key, required this.modelManager});
+  const DiagnosticsScreen({super.key, required this.modelManager, this.backendClient});
 
   final ModelManager modelManager;
+  final BackendClient? backendClient;
 
   @override
   State<DiagnosticsScreen> createState() => _DiagnosticsScreenState();
@@ -24,12 +26,14 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
 
   Map<String, String> _device = const {};
   String _backend = 'Checking…';
+  Map<String, String> _backendModels = const {};
 
   @override
   void initState() {
     super.initState();
     _loadDevice();
     _probeBackend();
+    _probeBackendModels();
   }
 
   Future<void> _loadDevice() async {
@@ -65,6 +69,36 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
     }
   }
 
+  Future<void> _probeBackendModels() async {
+    final client = widget.backendClient;
+    if (client == null) {
+      if (mounted) {
+        setState(() => _backendModels = const {'Status': 'No backend client.'});
+      }
+      return;
+    }
+    if (!client.isConfigured) {
+      if (mounted) {
+        setState(() =>
+            _backendModels = const {'Status': 'Backend URL not configured.'});
+      }
+      return;
+    }
+    try {
+      final models = await client.fetchModels();
+      if (mounted) {
+        setState(() => _backendModels = {
+              for (final m in models)
+                m.name: m.installed
+                    ? 'installed${m.loaded ? ' · loaded' : ''}'
+                    : 'missing',
+            });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _backendModels = {'Status': 'Unreachable: $e'});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final manager = widget.modelManager;
@@ -91,6 +125,7 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
             rows: {for (final e in FeatureFlags.all.entries) e.key: '${e.value}'},
           ),
           _Section(title: 'Backend', rows: {'Health': _backend}),
+          _Section(title: 'Backend models', rows: _backendModels),
         ],
       ),
     );

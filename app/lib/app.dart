@@ -3,6 +3,8 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 
 import 'config/feature_flags.dart';
+import 'services/backend_client.dart';
+import 'services/local_store.dart';
 import 'services/model_manager.dart';
 import 'theme/tokens.dart';
 import 'ui/screens/discover_screen.dart';
@@ -12,17 +14,32 @@ import 'ui/screens/try_on_screen.dart';
 import 'ui/screens/wardrobe_screen.dart';
 
 class AtelierApp extends StatefulWidget {
-  const AtelierApp({super.key, this.modelManager});
+  const AtelierApp({
+    super.key,
+    this.modelManager,
+    this.consentStore,
+    this.styleStore,
+    this.backendClient,
+  });
 
   final ModelManager? modelManager;
+  final ConsentStore? consentStore;
+  final StyleProfileStore? styleStore;
+  final BackendClient? backendClient;
 
   @override
   State<AtelierApp> createState() => _AtelierAppState();
 }
 
 class _AtelierAppState extends State<AtelierApp> {
-  late final ModelManager _modelManager =
-      widget.modelManager ?? ModelManager();
+  late final ModelManager _modelManager = widget.modelManager ?? ModelManager();
+  late final KeyValueStore _store = FileKeyValueStore();
+  late final ConsentStore _consentStore =
+      widget.consentStore ?? ConsentStore(_store);
+  late final StyleProfileStore _styleStore =
+      widget.styleStore ?? StyleProfileStore(_store);
+  late final BackendClient _backendClient =
+      widget.backendClient ?? BackendClient();
   int _tab = 0;
 
   @override
@@ -45,7 +62,12 @@ class _AtelierAppState extends State<AtelierApp> {
             const DiscoverScreen(),
             const TryOnScreen(),
             const WardrobeScreen(),
-            ProfileScreen(modelManager: _modelManager),
+            ProfileScreen(
+              modelManager: _modelManager,
+              consentStore: _consentStore,
+              styleStore: _styleStore,
+              backendClient: _backendClient,
+            ),
           ],
         ),
         bottomNavigationBar: _GlassNavBar(
