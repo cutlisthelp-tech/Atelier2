@@ -274,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: AppSpacing.unit * 2),
               if (_outcome case RecommendSuccess(:final recommendation))
-                _ResultCard(recommendation: recommendation)
+                ResultCard(recommendation: recommendation)
               else if (_outcome case RecommendFailure(
                 :final code,
                 :final message,
@@ -395,8 +395,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
 /// Glass is reserved for primary surfaces (DESIGN_SYSTEM §1) — the Best
 /// Outfit card is one of them.
-class _ResultCard extends StatelessWidget {
-  const _ResultCard({required this.recommendation});
+class ResultCard extends StatelessWidget {
+  const ResultCard({super.key, required this.recommendation});
 
   final OutfitRecommendation recommendation;
 

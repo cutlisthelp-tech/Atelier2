@@ -7,6 +7,7 @@ import '../../services/model_manager.dart';
 import '../../theme/tokens.dart';
 import 'body_scan_screen.dart';
 import 'consent_screen.dart';
+import 'design_preview_screen.dart';
 import 'diagnostics_screen.dart';
 import 'style_profile_screen.dart';
 
@@ -102,6 +103,14 @@ class ProfileScreen extends StatelessWidget {
                   backendClient: backendClient,
                 ),
               ),
+            ),
+          ),
+          _entry(
+            context,
+            title: 'Design preview',
+            subtitle: 'Developer — sample outfit card, labeled as such',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const DesignPreviewScreen()),
             ),
           ),
           const SizedBox(height: AppSpacing.unit * 2),
