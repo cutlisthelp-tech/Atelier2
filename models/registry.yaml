@@ -1,0 +1,120 @@
+# Model registry — docs/BUILD_PLAN.md §4.
+#
+# Every model used anywhere in Atelier (on-device or backend) is tracked here
+# with real, verified metadata. No placeholder values: an entry exists only
+# once its fields have been checked against the model's actual repository.
+#
+# Required fields per entry:
+#   name      — model identifier
+#   github    — source repository URL
+#   revision  — exact commit/tag verified
+#   license   — SPDX identifier as published by the authors
+#   weights   — real download URL for the weights
+#   checksum  — SHA-256 of the downloaded weight file
+#   runtime   — e.g. mediapipe, onnx, tflite, pytorch
+#   task      — e.g. pose_landmarks, face_landmarks, embedding, vton
+#   hardware  — e.g. cpu, gpu
+#   installed — true only after Download → Verify → Install completed
+#   tested    — true only after a real inference ran successfully
+#   notes     — anything a future maintainer must know
+models:
+  - name: pose_landmarker_full
+    github: https://github.com/google-ai-edge/mediapipe
+    revision: float16/latest (published via gs://mediapipe-models/pose_landmarker)
+    license: Apache-2.0
+    weights: https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task
+    checksum: 4eaa5eb7a98365221087693fcc286334cf0858e2eb6e15b506aa4a7ecdcec4ad
+    runtime: mediapipe
+    task: pose_landmarks
+    hardware: cpu
+    installed: true
+    tested: true
+    notes: >-
+      33-point body skeleton, IMAGE mode, num_poses=2 so a second detected
+      person becomes an honest MULTIPLE_PEOPLE failure instead of a silent
+      pick. Downloaded 2026-08-14 and SHA-256 verified by the backend
+      ModelManager into backend/.model_cache/ (gitignored). Tested Phase 1
+      against real CC0 fixture photos. Weights served under the model assets
+      terms of google-ai-edge/mediapipe (Apache-2.0).
+  - name: face_landmarker
+    github: https://github.com/google-ai-edge/mediapipe
+    revision: float16/latest (published via gs://mediapipe-models/face_landmarker)
+    license: Apache-2.0
+    weights: https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task
+    checksum: 64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff
+    runtime: mediapipe
+    task: face_landmarks
+    hardware: cpu
+    installed: true
+    tested: true
+    notes: >-
+      478-point face mesh including iris landmarks (468/473), IMAGE mode,
+      num_faces=2 so a second face becomes MULTIPLE_PEOPLE. Downloaded
+      2026-08-14 and SHA-256 verified by the backend ModelManager. Tested
+      Phase 1 against a real CC0 portrait fixture.
+  - name: selfie_multiclass_256x256
+    github: https://github.com/google-ai-edge/mediapipe
+    revision: float32/latest (published via gs://mediapipe-models/image_segmenter)
+    license: Apache-2.0
+    weights: https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite
+    checksum: c6748b1253a99067ef71f7e26ca71096cd449baefa8f101900ea23016507e0e0
+    runtime: mediapipe
+    task: garment_segmentation
+    hardware: cpu
+    installed: true
+    tested: true
+    notes: >-
+      6-class person parsing (background, hair, body-skin, face-skin, clothing,
+      accessories). Phase 2 uses the clothing class to confine garment-color
+      sampling on worn photos; flat-lay photos fall back to center-weighted
+      sampling. Downloaded 2026-08-14 and SHA-256 verified by the backend
+      ModelManager. Tested Phase 2 against real CC0 fixture photos.
+  - name: fashion_clip_vision_onnx
+    github: https://github.com/marqo-ai/marqo-FashionCLIP
+    revision: Hugging Face Marqo/marqo-fashionCLIP@44f4c655124ed71e90cbf528d82f508d69d8a81b
+    license: Apache-2.0
+    weights: https://huggingface.co/Marqo/marqo-fashionCLIP/resolve/main/onnx/vision_model_int8.onnx
+    checksum: e7e5df63d6b9d10a5339a083e044cd18318b98793a21bb210488ff970cd8dc28
+    runtime: onnxruntime
+    task: fashion_embedding
+    hardware: cpu
+    installed: true
+    tested: true
+    notes: >-
+      Fashion-tuned CLIP vision encoder (ViT-B-16, 512-dim) exported to ONNX
+      int8 by the model authors. CPU zero-shot classification on real fixtures
+      was sharp and well-calibrated, so int8 was kept over fp16. Downloaded
+      2026-08-14 and SHA-256 verified by the backend ModelManager.
+  - name: fashion_clip_text_onnx
+    github: https://github.com/marqo-ai/marqo-FashionCLIP
+    revision: Hugging Face Marqo/marqo-fashionCLIP@44f4c655124ed71e90cbf528d82f508d69d8a81b
+    license: Apache-2.0
+    weights: https://huggingface.co/Marqo/marqo-fashionCLIP/resolve/main/onnx/text_model_int8.onnx
+    checksum: 2a941099c0a03b7b5535eb5e541c76170a821c1ba19169e95cf137fe064d4d3c
+    runtime: onnxruntime
+    task: fashion_embedding
+    hardware: cpu
+    installed: true
+    tested: true
+    notes: >-
+      Paired text encoder for fashion_clip_vision_onnx (input_ids only,
+      sequence length 77). Text embeddings for the fixed Phase 2 prompt sets
+      are computed once and cached in process memory.
+  - name: fashion_clip_tokenizer
+    github: https://github.com/marqo-ai/marqo-FashionCLIP
+    revision: Hugging Face Marqo/marqo-fashionCLIP@44f4c655124ed71e90cbf528d82f508d69d8a81b
+    license: Apache-2.0
+    weights: https://huggingface.co/Marqo/marqo-fashionCLIP/resolve/main/tokenizer.json
+    checksum: d2c22662278b8c26ed9ffb46428534fdda1a9f60de2fbec87b2c4377e775d1ac
+    runtime: hf-tokenizers
+    task: tokenizer
+    hardware: cpu
+    installed: true
+    tested: true
+    notes: >-
+      BPE tokenizer published with marqo-fashionCLIP; loaded via the Hugging
+      Face `tokenizers` library. Registered with the same checksum lifecycle
+      as weights so nothing is fetched implicitly at runtime.
+# FASHN Human Parser was evaluated for Phase 2 and rejected: it ships under
+# the NVIDIA Source Code License for SegFormer, which is not commercially
+# safe under AGENTS.md rule 3. Recorded in docs/MODEL_SETUP.md.

@@ -1,0 +1,35 @@
+# Secrets — never commit (AGENTS.md rule 7)
+.env
+.env.*
+*.pem
+*.key
+**/secrets/
+
+# User data — never commit raw user images
+**/user_images/
+**/uploads/
+
+# Model weights / caches
+models/weights/
+**/model_cache/
+backend/.model_cache/
+
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Flutter / Dart
+app/.dart_tool/
+app/build/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/android/.gradle/
+*.apk
+*.aab
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
