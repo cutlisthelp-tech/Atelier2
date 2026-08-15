@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 
 import 'config/feature_flags.dart';
@@ -43,8 +41,9 @@ class _AtelierAppState extends State<AtelierApp> {
   late final BackendClient _backendClient =
       widget.backendClient ?? BackendClient();
   late final ScanRecordStore _bodyStore = ScanRecordStore.body(_store);
-  late final ScanRecordStore _appearanceStore =
-      ScanRecordStore.appearance(_store);
+  late final ScanRecordStore _appearanceStore = ScanRecordStore.appearance(
+    _store,
+  );
   late final WardrobeStore _wardrobeStore = WardrobeStore(_store);
   late final HomePlaceStore _homePlaceStore = HomePlaceStore(_store);
   int _tab = 0;
@@ -118,31 +117,25 @@ class _GlassNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfacePrimary.withValues(alpha: 0.66),
-            border: Border(top: BorderSide(color: AppColors.borderSubtle)),
-          ),
-          child: SafeArea(
-            child: SizedBox(
-              height: 56,
-              child: Row(
-                children: [
-                  for (var i = 0; i < _tabs.length; i++)
-                    Expanded(
-                      child: _NavItem(
-                        label: _tabs[i],
-                        icon: _icons[i],
-                        selected: i == currentIndex,
-                        onTap: () => onSelect(i),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+    return GlassSurface(
+      base: AppGlass.navBase,
+      alpha: AppGlass.navAlpha,
+      border: Border(top: BorderSide(color: AppColors.borderSubtle)),
+      child: SafeArea(
+        child: SizedBox(
+          height: 56,
+          child: Row(
+            children: [
+              for (var i = 0; i < _tabs.length; i++)
+                Expanded(
+                  child: _NavItem(
+                    label: _tabs[i],
+                    icon: _icons[i],
+                    selected: i == currentIndex,
+                    onTap: () => onSelect(i),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

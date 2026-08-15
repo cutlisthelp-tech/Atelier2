@@ -150,6 +150,13 @@ Honest limits of this verification:
   structural because real weather changes.
 - Trend, Budget and User Preference factors are inactive by design (no trend
   feed, no prices on photographed garments, no feedback log yet).
+- **Ranked alternatives #2–#4 (Safer / Trend / Bold)**: the full selection
+  mechanism is implemented and tested (strategy labels, determinism,
+  no-padding rule), but the fixture wardrobe assembles exactly ONE outfit,
+  so end-to-end tests demonstrate #1 only — outfits are never padded to
+  four (locked honesty decision). A real multi-outfit demonstration needs a
+  larger wardrobe: it lands with the Phase 7 Wardrobe module (richer item
+  set + fixtures), not as a Phase 3 retrofit.
 - Outfits are assembled from the user's photographed wardrobe only — no
   merchant catalog is connected (rule 4); `SHOP THIS LOOK` renders
   `CATALOG_NOT_CONNECTED`.

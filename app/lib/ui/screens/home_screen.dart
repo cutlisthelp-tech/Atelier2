@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 
 import '../../models/recommendation.dart';
@@ -36,8 +34,19 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   static const _occasions = [
-    'casual lunch', 'university', 'office', 'interview', 'wedding', 'date',
-    'dinner', 'party', 'travel', 'beach', 'gym', 'shopping', 'formal',
+    'casual lunch',
+    'university',
+    'office',
+    'interview',
+    'wedding',
+    'date',
+    'dinner',
+    'party',
+    'travel',
+    'beach',
+    'gym',
+    'shopping',
+    'formal',
   ];
   static const _tops = {'t-shirt', 'shirt', 'blouse', 'sweater', 'hoodie'};
   static const _bottoms = {'jeans', 'trousers', 'shorts', 'skirt'};
@@ -45,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _shoes = {'shoes', 'sneakers', 'boots'};
 
   bool _loading = true;
+  bool _storageUnavailable = false;
   ScanRecord? _body;
   ScanRecord? _appearance;
   List<WardrobeItem> _wardrobe = [];
@@ -61,13 +71,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadAll() async {
-    final results = await Future.wait([
-      widget.bodyStore.load(),
-      widget.appearanceStore.load(),
-      widget.wardrobeStore.loadAll(),
-      widget.homePlaceStore.load(),
-      widget.styleStore.load(),
-    ]);
+    List<Object?> results;
+    try {
+      results = await Future.wait([
+        widget.bodyStore.load(),
+        widget.appearanceStore.load(),
+        widget.wardrobeStore.loadAll(),
+        widget.homePlaceStore.load(),
+        widget.styleStore.load(),
+      ]);
+    } catch (_) {
+      // e.g. the web preview has no local file storage — say so, don't crash.
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _storageUnavailable = true;
+        });
+      }
+      return;
+    }
     if (!mounted) return;
     setState(() {
       _body = results[0] as ScanRecord?;
@@ -80,9 +102,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Set<String> get _categories => _wardrobe
-      .map((i) =>
-          ((i.payload['garment'] as Map<String, dynamic>?)?['category']
-              as Map<String, dynamic>?)?['value'] as String?)
+      .map(
+        (i) =>
+            ((i.payload['garment'] as Map<String, dynamic>?)?['category']
+                    as Map<String, dynamic>?)?['value']
+                as String?,
+      )
       .nonNulls
       .toSet();
 
@@ -99,19 +124,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<Map<String, dynamic>> get _requestWardrobe => [
-        for (final item in _wardrobe)
-          {
-            'id': item.id,
-            'garment': {
-              for (final e in (item.payload['garment']
-                      as Map<String, dynamic>? ??
-                  const <String, dynamic>{}).entries)
-                if (e.key != 'embedding') e.key: e.value,
-            },
-            'confidence': item.payload['confidence'],
-            'flags': item.payload['flags'] ?? const <String>[],
-          },
-      ];
+    for (final item in _wardrobe)
+      {
+        'id': item.id,
+        'garment': {
+          for (final e
+              in (item.payload['garment'] as Map<String, dynamic>? ??
+                      const <String, dynamic>{})
+                  .entries)
+            if (e.key != 'embedding') e.key: e.value,
+        },
+        'confidence': item.payload['confidence'],
+        'flags': item.payload['flags'] ?? const <String>[],
+      },
+  ];
 
   Future<void> _pickPlace() async {
     final picked = await showModalBottomSheet<HomePlace>(
@@ -161,10 +187,21 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             'Your Best Look',
             style: AppType.display.copyWith(
-                fontSize: 28, color: AppColors.textPrimary),
+              fontSize: 28,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: AppSpacing.unit * 2),
-          if (_body == null)
+          if (_storageUnavailable)
+            _prerequisite(
+              'Local storage is unavailable here.',
+              'This platform has no app data directory, so profiles and the '
+                  'wardrobe can\u2019t be stored. Run Atelier on Android for '
+                  'the full flow.',
+              '',
+              () {},
+            )
+          else if (_body == null)
             _prerequisite(
               'Atelier hasn\u2019t met you yet.',
               'Run a body scan in Profile — proportions and coloring come '
@@ -238,7 +275,10 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: AppSpacing.unit * 2),
               if (_outcome case RecommendSuccess(:final recommendation))
                 _ResultCard(recommendation: recommendation)
-              else if (_outcome case RecommendFailure(:final code, :final message))
+              else if (_outcome case RecommendFailure(
+                :final code,
+                :final message,
+              ))
                 _failure(code, message),
             ],
           ],
@@ -248,7 +288,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _prerequisite(
-      String title, String message, String actionLabel, VoidCallback onAction) {
+    String title,
+    String message,
+    String actionLabel,
+    VoidCallback onAction,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.unit * 2),
       child: Column(
@@ -257,7 +301,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             title,
             style: AppType.display.copyWith(
-                fontSize: 20, color: AppColors.textPrimary),
+              fontSize: 20,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: AppSpacing.unit),
           Text(
@@ -269,18 +315,21 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.unit * 2),
-          SizedBox(
-            height: AppSpacing.minTapTarget,
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.textPrimary,
-                foregroundColor: AppColors.surfacePrimary,
+          if (actionLabel.isNotEmpty)
+            SizedBox(
+              height: AppSpacing.minTapTarget,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.textPrimary,
+                  foregroundColor: AppColors.surfacePrimary,
+                ),
+                onPressed: onAction,
+                child: Text(
+                  actionLabel,
+                  style: AppType.interface.copyWith(fontSize: 15),
+                ),
               ),
-              onPressed: onAction,
-              child: Text(actionLabel,
-                  style: AppType.interface.copyWith(fontSize: 15)),
             ),
-          ),
         ],
       ),
     );
@@ -290,23 +339,30 @@ class _HomeScreenState extends State<HomeScreen> {
     final place = _place!;
     return Row(
       children: [
-        const Icon(Icons.location_on_outlined,
-            size: 18, color: AppColors.textSecondary),
+        const Icon(
+          Icons.location_on_outlined,
+          size: 18,
+          color: AppColors.textSecondary,
+        ),
         const SizedBox(width: AppSpacing.unit),
         Expanded(
           child: Text(
             place.label.isEmpty
                 ? '${place.latitude.toStringAsFixed(2)}, '
-                    '${place.longitude.toStringAsFixed(2)}'
+                      '${place.longitude.toStringAsFixed(2)}'
                 : place.label,
             style: AppType.interface.copyWith(color: AppColors.textPrimary),
           ),
         ),
         TextButton(
           onPressed: _pickPlace,
-          child: Text('Change',
-              style: AppType.interface.copyWith(
-                  fontSize: 13, color: AppColors.textSecondary)),
+          child: Text(
+            'Change',
+            style: AppType.interface.copyWith(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
         ),
       ],
     );
@@ -320,8 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Text(
             code,
-            style: AppType.data.copyWith(
-                fontSize: 12, color: AppColors.error),
+            style: AppType.data.copyWith(fontSize: 12, color: AppColors.error),
           ),
           const SizedBox(height: AppSpacing.half),
           Text(
@@ -349,7 +404,7 @@ class _ResultCard extends StatelessWidget {
     final w = recommendation.weather;
     final weather = w.state == 'ok'
         ? '${w.temperatureC?.toStringAsFixed(1)}\u00B0C '
-            '${w.weatherLabel ?? ''}'
+              '${w.weatherLabel ?? ''}'
         : 'Weather unreachable \u2014 scored without it';
     final place = recommendation.placeLabel.isEmpty
         ? ''
@@ -361,176 +416,175 @@ class _ResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final best = recommendation.outfits.first;
     final alternatives = recommendation.outfits.skip(1).toList();
-    return ClipRRect(
+    return GlassSurface(
       borderRadius: BorderRadius.circular(AppSpacing.unit * 2),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceElevated.withValues(alpha: 0.55),
-            border: Border.all(color: AppColors.borderSubtle),
-            borderRadius: BorderRadius.circular(AppSpacing.unit * 2),
-          ),
-          padding: const EdgeInsets.all(AppSpacing.unit * 2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.all(AppSpacing.unit * 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  _ScoreRing(score: best.score),
-                  const SizedBox(width: AppSpacing.unit * 2),
-                  Expanded(
-                    child: Column(
+              _ScoreRing(score: best.score),
+              const SizedBox(width: AppSpacing.unit * 2),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Personal Match',
+                      style: AppType.display.copyWith(
+                        fontSize: 20,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.half),
+                    Text(
+                      _contextLine,
+                      style: AppType.interface.copyWith(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.unit * 2),
+          for (final g in best.garments) _PieceRow(garment: g),
+          const SizedBox(height: AppSpacing.unit),
+          Material(
+            type: MaterialType.transparency,
+            child: ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(bottom: AppSpacing.unit),
+              title: Text(
+                'Why it works',
+                style: AppType.interface.copyWith(
+                  fontSize: 14,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              children: [
+                for (final line in best.why)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.half),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Personal Match',
-                          style: AppType.display.copyWith(
-                              fontSize: 20, color: AppColors.textPrimary),
-                        ),
-                        const SizedBox(height: AppSpacing.half),
-                        Text(
-                          _contextLine,
+                          '\u2022 ',
                           style: AppType.interface.copyWith(
-                            fontSize: 13,
-                            height: 1.4,
                             color: AppColors.textSecondary,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            line,
+                            style: AppType.interface.copyWith(
+                              fontSize: 13,
+                              height: 1.4,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.unit * 2),
-              for (final g in best.garments) _PieceRow(garment: g),
-              const SizedBox(height: AppSpacing.unit),
-              Material(
-                type: MaterialType.transparency,
-                child: ExpansionTile(
-                tilePadding: EdgeInsets.zero,
-                childrenPadding:
-                    const EdgeInsets.only(bottom: AppSpacing.unit),
-                title: Text(
-                  'Why it works',
-                  style: AppType.interface.copyWith(
-                      fontSize: 14, color: AppColors.textPrimary),
-                ),
-                children: [
-                  for (final line in best.why)
-                    Padding(
-                      padding: const EdgeInsets.only(
-                          bottom: AppSpacing.half),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('\u2022 ',
-                              style: AppType.interface.copyWith(
-                                  color: AppColors.textSecondary)),
-                          Expanded(
-                            child: Text(
-                              line,
-                              style: AppType.interface.copyWith(
-                                fontSize: 13,
-                                height: 1.4,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-              ),
-              if (alternatives.isNotEmpty) ...[
-                Text(
-                  'Alternatives',
-                  style: AppType.interface.copyWith(
-                      fontSize: 14, color: AppColors.textPrimary),
-                ),
-                const SizedBox(height: AppSpacing.unit),
-                SizedBox(
-                  height: 64,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: alternatives.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(width: AppSpacing.unit),
-                    itemBuilder: (_, i) => _AlternativeTile(
-                        outfit: alternatives[i]),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.unit),
               ],
-              Material(
-                type: MaterialType.transparency,
-                child: ExpansionTile(
-                tilePadding: EdgeInsets.zero,
-                title: Text(
-                  'How the score is built',
-                  style: AppType.interface.copyWith(
-                      fontSize: 14, color: AppColors.textPrimary),
+            ),
+          ),
+          if (alternatives.isNotEmpty) ...[
+            Text(
+              'Alternatives',
+              style: AppType.interface.copyWith(
+                fontSize: 14,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.unit),
+            SizedBox(
+              height: 64,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: alternatives.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(width: AppSpacing.unit),
+                itemBuilder: (_, i) =>
+                    _AlternativeTile(outfit: alternatives[i]),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.unit),
+          ],
+          Material(
+            type: MaterialType.transparency,
+            child: ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: Text(
+                'How the score is built',
+                style: AppType.interface.copyWith(
+                  fontSize: 14,
+                  color: AppColors.textPrimary,
                 ),
-                children: [
-                  for (final f in recommendation.factors)
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(bottom: AppSpacing.half),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              f.name.replaceAll('_', ' '),
-                              style: AppType.interface.copyWith(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary),
+              ),
+              children: [
+                for (final f in recommendation.factors)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.half),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            f.name.replaceAll('_', ' '),
+                            style: AppType.interface.copyWith(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
                             ),
                           ),
-                          Text(
-                            f.active
-                                ? '${f.contribution.toStringAsFixed(1)} '
+                        ),
+                        Text(
+                          f.active
+                              ? '${f.contribution.toStringAsFixed(1)} '
                                     '/ ${f.effectiveWeight.toStringAsFixed(0)}'
-                                : 'inactive \u2014 ${f.inactiveReason ?? ''}',
-                            style: AppType.data.copyWith(
-                              fontSize: 12,
-                              color: f.active
-                                  ? AppColors.textPrimary
-                                  : AppColors.textSecondary,
-                            ),
+                              : 'inactive \u2014 ${f.inactiveReason ?? ''}',
+                          style: AppType.data.copyWith(
+                            fontSize: 12,
+                            color: f.active
+                                ? AppColors.textPrimary
+                                : AppColors.textSecondary,
                           ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-              ),
-              const SizedBox(height: AppSpacing.unit),
-              Row(
-                children: [
-                  Expanded(
-                    child: _actionButton(
-                      'TRY ON',
-                      () => _showNote(context,
-                          'Try-on arrives next \u2014 Phase 4.'),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.unit),
-                  Expanded(
-                    child: _actionButton(
-                      'SHOP THIS LOOK',
-                      () => _showNote(
-                        context,
-                        '${recommendation.shoppingState}\n'
-                        '${recommendation.shoppingMessage}',
-                      ),
-                    ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.unit),
+          Row(
+            children: [
+              Expanded(
+                child: _actionButton(
+                  'TRY ON',
+                  () =>
+                      _showNote(context, 'Try-on arrives next \u2014 Phase 4.'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.unit),
+              Expanded(
+                child: _actionButton(
+                  'SHOP THIS LOOK',
+                  () => _showNote(
+                    context,
+                    '${recommendation.shoppingState}\n'
+                    '${recommendation.shoppingMessage}',
                   ),
-                ],
+                ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -544,9 +598,10 @@ class _ResultCard extends StatelessWidget {
           foregroundColor: AppColors.textPrimary,
         ),
         onPressed: onTap,
-        child: Text(label,
-            style: AppType.interface.copyWith(
-                fontSize: 12, letterSpacing: 1.2)),
+        child: Text(
+          label,
+          style: AppType.interface.copyWith(fontSize: 12, letterSpacing: 1.2),
+        ),
       ),
     );
   }
@@ -554,8 +609,7 @@ class _ResultCard extends StatelessWidget {
   void _showNote(BuildContext context, String text) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(text,
-            style: AppType.interface.copyWith(fontSize: 13)),
+        content: Text(text, style: AppType.interface.copyWith(fontSize: 13)),
       ),
     );
   }
@@ -594,15 +648,16 @@ class _PieceRow extends StatelessWidget {
           Expanded(
             child: Text(
               garment.category,
-              style:
-                  AppType.interface.copyWith(color: AppColors.textPrimary),
+              style: AppType.interface.copyWith(color: AppColors.textPrimary),
             ),
           ),
           if (garment.fit != null)
             Text(
               garment.fit!,
               style: AppType.data.copyWith(
-                  fontSize: 12, color: AppColors.textSecondary),
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
         ],
       ),
@@ -633,13 +688,17 @@ class _AlternativeTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppType.interface.copyWith(
-                fontSize: 12, color: AppColors.textPrimary),
+              fontSize: 12,
+              color: AppColors.textPrimary,
+            ),
           ),
           const Spacer(),
           Text(
             outfit.score.toStringAsFixed(1),
             style: AppType.data.copyWith(
-                fontSize: 16, color: AppColors.textPrimary),
+              fontSize: 16,
+              color: AppColors.textPrimary,
+            ),
           ),
         ],
       ),
@@ -663,7 +722,9 @@ class _ScoreRing extends StatelessWidget {
           child: Text(
             score.toStringAsFixed(0),
             style: AppType.data.copyWith(
-                fontSize: 22, color: AppColors.textPrimary),
+              fontSize: 22,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
       ),
@@ -751,7 +812,9 @@ class _SkeletonCard extends StatelessWidget {
           Text(
             'Scoring against real weather and your profiles\u2026',
             style: AppType.interface.copyWith(
-                fontSize: 13, color: AppColors.textSecondary),
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -813,14 +876,14 @@ class _PlacePickerState extends State<_PlacePicker> {
       return;
     }
     if (lon == null || lon < -180 || lon > 180) {
-      setState(() => _error = 'Longitude must be a number between -180 and 180.');
+      setState(
+        () => _error = 'Longitude must be a number between -180 and 180.',
+      );
       return;
     }
-    Navigator.of(context).pop(HomePlace(
-      label: _label.text.trim(),
-      latitude: lat,
-      longitude: lon,
-    ));
+    Navigator.of(
+      context,
+    ).pop(HomePlace(label: _label.text.trim(), latitude: lat, longitude: lon));
   }
 
   @override
@@ -839,7 +902,9 @@ class _PlacePickerState extends State<_PlacePicker> {
           Text(
             'Choose a place',
             style: AppType.display.copyWith(
-                fontSize: 20, color: AppColors.textPrimary),
+              fontSize: 20,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: AppSpacing.unit * 2),
           Wrap(
@@ -851,7 +916,9 @@ class _PlacePickerState extends State<_PlacePicker> {
                   label: Text(
                     p.label,
                     style: AppType.interface.copyWith(
-                        fontSize: 13, color: AppColors.textPrimary),
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   backgroundColor: AppColors.surfacePrimary,
                   side: BorderSide(color: AppColors.borderSubtle),
@@ -863,7 +930,9 @@ class _PlacePickerState extends State<_PlacePicker> {
           Text(
             'Or enter coordinates',
             style: AppType.interface.copyWith(
-                fontSize: 13, color: AppColors.textSecondary),
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: AppSpacing.unit),
           TextField(
@@ -876,8 +945,10 @@ class _PlacePickerState extends State<_PlacePicker> {
               Expanded(
                 child: TextField(
                   controller: _lat,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true, signed: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
                   decoration: const InputDecoration(labelText: 'Latitude'),
                 ),
               ),
@@ -885,8 +956,10 @@ class _PlacePickerState extends State<_PlacePicker> {
               Expanded(
                 child: TextField(
                   controller: _lon,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true, signed: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
+                  ),
                   decoration: const InputDecoration(labelText: 'Longitude'),
                 ),
               ),
@@ -897,7 +970,9 @@ class _PlacePickerState extends State<_PlacePicker> {
             Text(
               _error!,
               style: AppType.interface.copyWith(
-                  fontSize: 13, color: AppColors.error),
+                fontSize: 13,
+                color: AppColors.error,
+              ),
             ),
           ],
           const SizedBox(height: AppSpacing.unit * 2),
@@ -910,8 +985,10 @@ class _PlacePickerState extends State<_PlacePicker> {
                 foregroundColor: AppColors.surfacePrimary,
               ),
               onPressed: _submitManual,
-              child: Text('Use these coordinates',
-                  style: AppType.interface.copyWith(fontSize: 14)),
+              child: Text(
+                'Use these coordinates',
+                style: AppType.interface.copyWith(fontSize: 14),
+              ),
             ),
           ),
         ],

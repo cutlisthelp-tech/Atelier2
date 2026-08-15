@@ -25,6 +25,7 @@ class WardrobeScreen extends StatefulWidget {
 
 class _WardrobeScreenState extends State<WardrobeScreen> {
   List<WardrobeItem>? _items;
+  bool _storageUnavailable = false;
 
   @override
   void initState() {
@@ -33,7 +34,13 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   }
 
   Future<void> _load() async {
-    final items = await widget.wardrobeStore?.loadAll() ?? <WardrobeItem>[];
+    List<WardrobeItem> items;
+    try {
+      items = await widget.wardrobeStore?.loadAll() ?? <WardrobeItem>[];
+    } catch (_) {
+      if (mounted) setState(() => _storageUnavailable = true);
+      return;
+    }
     if (mounted) setState(() => _items = items);
   }
 
@@ -56,6 +63,14 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_storageUnavailable) {
+      return const EmptyState(
+        title: 'Local storage is unavailable here.',
+        message:
+            'This platform has no app data directory, so the wardrobe cannot '
+            'be stored. Run Atelier on Android for the full flow.',
+      );
+    }
     final items = _items;
     if (items == null) {
       return const SizedBox.shrink();
@@ -81,7 +96,9 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
                 child: Text(
                   'Wardrobe',
                   style: AppType.display.copyWith(
-                      fontSize: 28, color: AppColors.textPrimary),
+                    fontSize: 28,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
               SizedBox(
@@ -171,7 +188,8 @@ class _WardrobeRow extends StatelessWidget {
                 Text(
                   _category,
                   style: AppType.interface.copyWith(
-                      color: AppColors.textPrimary),
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 Text(
                   '${(_confidence * 100).round()}% confident',
@@ -185,8 +203,10 @@ class _WardrobeRow extends StatelessWidget {
           ),
           IconButton(
             onPressed: () => onRemove(item),
-            icon: const Icon(Icons.delete_outline,
-                color: AppColors.textSecondary),
+            icon: const Icon(
+              Icons.delete_outline,
+              color: AppColors.textSecondary,
+            ),
             tooltip: 'Remove from wardrobe',
           ),
         ],
