@@ -17,12 +17,16 @@ class ProfileScreen extends StatelessWidget {
     required this.consentStore,
     required this.styleStore,
     required this.backendClient,
+    this.bodyStore,
+    this.appearanceStore,
   });
 
   final ModelManager modelManager;
   final ConsentStore consentStore;
   final StyleProfileStore styleStore;
   final BackendClient backendClient;
+  final ScanRecordStore? bodyStore;
+  final ScanRecordStore? appearanceStore;
 
   Future<void> _startBodyScan(BuildContext context) async {
     final profile = await styleStore.load();
@@ -43,8 +47,12 @@ class ProfileScreen extends StatelessWidget {
     await startScanFlow(
       context,
       consentStore: consentStore,
-      scanScreen: (_) =>
-          BodyScanScreen(client: backendClient, heightCm: height),
+      scanScreen: (_) => BodyScanScreen(
+        client: backendClient,
+        heightCm: height,
+        bodyStore: bodyStore,
+        appearanceStore: appearanceStore,
+      ),
     );
   }
 

@@ -66,4 +66,7 @@ over fp16. No PyTorch dependency: onnxruntime + tokenizers only.
 
 - Phase 2: fashion-tuned embedding model — **done**: Marqo-fashionCLIP ONNX
   (see above).
+- Phase 3: personal outfit recommendation — **zero models added**. Ranking is
+  deterministic configuration + pure functions; weather is an external API
+  (see `DATA_SOURCES.md`), not a model.
 - Phase 4: virtual try-on — hosted API, not a local model.

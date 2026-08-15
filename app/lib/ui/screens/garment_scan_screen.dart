@@ -3,20 +3,24 @@ import 'package:flutter/material.dart';
 
 import '../../models/analysis.dart';
 import '../../services/backend_client.dart';
+import '../../services/local_store.dart';
 import '../../theme/tokens.dart';
 import 'scan_result_screen.dart';
 
 /// Camera capture → backend garment analysis → honest result. Garments are
-/// not biometric data, so no consent gate precedes this flow.
+/// not biometric data, so no consent gate precedes this flow. A successful
+/// analysis is added to the local wardrobe (analysis JSON only).
 class GarmentScanScreen extends StatefulWidget {
   const GarmentScanScreen({
     super.key,
     required this.client,
     this.camerasFinder = availableCameras,
+    this.wardrobeStore,
   });
 
   final BackendClient client;
   final Future<List<CameraDescription>> Function() camerasFinder;
+  final WardrobeStore? wardrobeStore;
 
   @override
   State<GarmentScanScreen> createState() => _GarmentScanScreenState();
@@ -63,6 +67,10 @@ class _GarmentScanScreenState extends State<GarmentScanScreen> {
       final shot = await controller.takePicture();
       final bytes = await shot.readAsBytes();
       final outcome = await widget.client.analyzeGarment(bytes);
+      if (outcome is GarmentScanSuccess &&
+          outcome.garment.category.value != null) {
+        await widget.wardrobeStore?.add(outcome.payload);
+      }
       if (!mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(

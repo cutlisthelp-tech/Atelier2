@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:atelier/app.dart';
 import 'package:atelier/models/model_registry.dart';
+import 'package:atelier/services/local_store.dart';
 import 'package:atelier/services/model_manager.dart';
 import 'package:flutter/material.dart' show Size;
 import 'package:flutter_test/flutter_test.dart';
@@ -11,13 +12,14 @@ void main() {
 
   testWidgets('app boots with five tabs, each showing an honest empty state',
       (tester) async {
-    await tester.pumpWidget(const AtelierApp());
+    await tester.pumpWidget(
+        AtelierApp(keyValueStore: InMemoryKeyValueStore()));
     await tester.pumpAndSettle();
 
     for (final label in ['HOME', 'DISCOVER', 'TRY ON', 'WARDROBE', 'PROFILE']) {
       expect(find.text(label), findsOneWidget);
     }
-    expect(find.text('Your best look appears here.'), findsOneWidget);
+    expect(find.text('Atelier hasn\u2019t met you yet.'), findsOneWidget);
 
     await tester.tap(find.text('DISCOVER'));
     await tester.pumpAndSettle();
@@ -47,7 +49,10 @@ void main() {
       File('../models/registry.yaml').readAsStringSync(),
     );
 
-    await tester.pumpWidget(AtelierApp(modelManager: ModelManager(seed: registry)));
+    await tester.pumpWidget(AtelierApp(
+      modelManager: ModelManager(seed: registry),
+      keyValueStore: InMemoryKeyValueStore(),
+    ));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.text('PROFILE'));

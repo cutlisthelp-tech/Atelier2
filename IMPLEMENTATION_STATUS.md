@@ -54,8 +54,9 @@ Honest limits of this verification:
 On-device inference migration; full streaming Constellation Scan animation;
 chest/waist depth measurements; Style Profile remote sync (Phase 9);
 salient-object segmentation for busy flat-lay backgrounds (Phase 7/8);
-garment embedding storage + pgvector indexing (Phase 8); wardrobe item
-persistence (Phase 7); Marqo-fashionSigLIP upgrade (Phase 8).
+garment embedding storage + pgvector indexing (Phase 8); full Wardrobe
+module — Phase 3 persists analysis JSON only (Phase 7 owns the module);
+Marqo-fashionSigLIP upgrade (Phase 8).
 
 ## Phase 2 — Garment Analysis
 
@@ -99,6 +100,63 @@ Honest limits of this verification:
 - Pattern/material/fit are honest zero-shot reads with per-attribute
   thresholds — expect `Unknown` often on flat-lays. That is the DoD working.
 
-## Phases 3–10
+## Phase 3 — Personal Outfit Recommendation
+
+**Status: VERIFIED — 2026-08-15**
+
+Definition of Done — BUILD_PLAN §2 *One Test*: real photo → real analysis →
+real occasion + place → real weather → real available garments → candidate
+outfits → scored for THIS person → Best Outfit → explanation tied to real
+score components. §3 *Personalization Test*: the same wardrobe/occasion/place
+must not score identically for 3 distinct real profiles, for different
+reasons.
+
+Evidence:
+
+- `pytest` — 29/29 passed. Nine new Phase 3 tests call the **real**
+  `/analysis/*` endpoints on **real fixture photos** (two new CC BY-SA
+  fixtures — jeans, sneakers — with provenance in
+  `backend/tests/fixtures/`) to build the wardrobe, then call
+  `/recommend/outfit`: live Open-Meteo weather (`state == "ok"`, structural
+  asserts only — real weather moves), best_match outfit assembled from the
+  photographed sweater + jeans + sneakers, `why` bullets bound to real score
+  components, active effective weights sum to 100, `score == Σ contribution`,
+  `shopping.state == CATALOG_NOT_CONNECTED`, the unidentifiable hanger photo
+  reported as `unplaceable` (never guessed into a slot).
+- §3 personalization verified: three real profiles (body photo A, body photo
+  B, and A without appearance + a different style profile) produce three
+  distinct scores, and the *reasons* differ — A vs B on the body-driven
+  proportion factor, A vs C on appearance activity and fit preference.
+- Honesty under failure: `WEATHER_BASE_URL` pointed at a genuinely
+  unreachable address → `WEATHER_UNAVAILABLE`, weather factor inactive,
+  recommendation still returned; `banned_colors` emptying the pool → 422
+  `INSUFFICIENT_DATA`; trend/budget/user_preference reported inactive with
+  real reasons and their weights redistributed.
+- Live `uvicorn` smoke — real analyses on fixtures → real
+  `POST /recommend/outfit` → 200 with live Casablanca weather (22.3 °C,
+  partly cloudy) and a 71.1 best_match outfit; a second server with an
+  unreachable weather URL returned the honest `WEATHER_UNAVAILABLE` path.
+- `flutter analyze` — no issues. `flutter test` — 20/20 passed: store
+  round-trips, HOME prerequisite states computed from real stored data,
+  result rendering from contract-shaped payloads, envelope parsing into
+  typed success/failure. `flutter build apk --debug` — `app-debug.apk`
+  produced.
+- Deterministic ranking: pure scoring functions, double-call identical
+  output; explanations are templates bound to real contributions, not an LLM.
+
+Honest limits of this verification:
+
+- Weather in tests is **live** Open-Meteo — success-path asserts are
+  structural because real weather changes.
+- Trend, Budget and User Preference factors are inactive by design (no trend
+  feed, no prices on photographed garments, no feedback log yet).
+- Outfits are assembled from the user's photographed wardrobe only — no
+  merchant catalog is connected (rule 4); `SHOP THIS LOOK` renders
+  `CATALOG_NOT_CONNECTED`.
+- Camera capture remains the maintainer's Android/Termux flow; the pipeline
+  is verified end-to-end from real photos through the same endpoints the app
+  calls.
+
+## Phases 4–10
 
 Not started. No feature flags are enabled.

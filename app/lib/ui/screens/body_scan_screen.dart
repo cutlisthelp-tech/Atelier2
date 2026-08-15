@@ -3,22 +3,28 @@ import 'package:flutter/material.dart';
 
 import '../../models/analysis.dart';
 import '../../services/backend_client.dart';
+import '../../services/local_store.dart';
 import '../../theme/tokens.dart';
 import 'scan_result_screen.dart';
 
 /// Camera capture → backend analysis → honest result. The analyzing state is
-/// deliberately plain: no fake progress, no invented ETA.
+/// deliberately plain: no fake progress, no invented ETA. On success the raw
+/// payloads are persisted so HOME can send them back for scoring (Phase 3).
 class BodyScanScreen extends StatefulWidget {
   const BodyScanScreen({
     super.key,
     required this.client,
     required this.heightCm,
     this.camerasFinder = availableCameras,
+    this.bodyStore,
+    this.appearanceStore,
   });
 
   final BackendClient client;
   final double heightCm;
   final Future<List<CameraDescription>> Function() camerasFinder;
+  final ScanRecordStore? bodyStore;
+  final ScanRecordStore? appearanceStore;
 
   @override
   State<BodyScanScreen> createState() => _BodyScanScreenState();
@@ -67,8 +73,12 @@ class _BodyScanScreenState extends State<BodyScanScreen> {
       final bodyOutcome = await widget.client.analyzeBody(bytes, widget.heightCm);
       AppearanceScanSuccess? appearance;
       if (bodyOutcome is BodyScanSuccess) {
+        await widget.bodyStore?.save(bodyOutcome.payload);
         final colorOutcome = await widget.client.analyzeAppearance(bytes);
-        if (colorOutcome is AppearanceScanSuccess) appearance = colorOutcome;
+        if (colorOutcome is AppearanceScanSuccess) {
+          appearance = colorOutcome;
+          await widget.appearanceStore?.save(appearance.payload);
+        }
         // A full-body capture often has no usable face — that is not an error.
       }
       if (!mounted) return;

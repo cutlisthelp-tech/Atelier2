@@ -97,11 +97,15 @@ class BodyScanSuccess extends ScanOutcome {
     required this.body,
     required this.confidence,
     required this.flags,
+    this.payload = const {},
   });
 
   final BodyProfile body;
   final double confidence;
   final List<String> flags;
+
+  /// The exact backend response map, for lossless round-tripping (Phase 3).
+  final Map<String, dynamic> payload;
 }
 
 class AppearanceScanSuccess extends ScanOutcome {
@@ -109,11 +113,13 @@ class AppearanceScanSuccess extends ScanOutcome {
     required this.color,
     required this.confidence,
     required this.flags,
+    this.payload = const {},
   });
 
   final ColorProfile color;
   final double confidence;
   final List<String> flags;
+  final Map<String, dynamic> payload;
 }
 
 class ScanFailure extends ScanOutcome {
@@ -196,11 +202,13 @@ class GarmentScanSuccess extends ScanOutcome {
     required this.garment,
     required this.confidence,
     required this.flags,
+    this.payload = const {},
   });
 
   final GarmentProfile garment;
   final double confidence;
   final List<String> flags;
+  final Map<String, dynamic> payload;
 }
 
 class ModelStatus {

@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import '../models/analysis.dart';
+import '../models/recommendation.dart';
 
 class BackendClient {
   BackendClient({
@@ -31,6 +32,7 @@ class BackendClient {
         body: BodyProfile.fromJson(body['body'] as Map<String, dynamic>),
         confidence: (body['confidence'] as num).toDouble(),
         flags: (body['flags'] as List<dynamic>).cast<String>(),
+        payload: body,
       );
     }
     return outcome.toFailure();
@@ -43,6 +45,7 @@ class BackendClient {
         color: ColorProfile.fromJson(body['color'] as Map<String, dynamic>),
         confidence: (body['confidence'] as num).toDouble(),
         flags: (body['flags'] as List<dynamic>).cast<String>(),
+        payload: body,
       );
     }
     return outcome.toFailure();
@@ -56,9 +59,77 @@ class BackendClient {
             GarmentProfile.fromJson(body['garment'] as Map<String, dynamic>),
         confidence: (body['confidence'] as num).toDouble(),
         flags: (body['flags'] as List<dynamic>).cast<String>(),
+        payload: body,
       );
     }
     return outcome.toFailure();
+  }
+
+  /// Phase 3: score outfits from the user's real wardrobe + profiles.
+  /// First JSON POST in the codebase; the backend fetches real weather
+  /// inside this call, hence the generous timeout.
+  Future<RecommendOutcome> recommendOutfit({
+    required String occasion,
+    required double latitude,
+    required double longitude,
+    required String placeLabel,
+    required Map<String, dynamic> bodyProfile,
+    Map<String, dynamic>? colorProfile,
+    required Map<String, dynamic> styleProfile,
+    required List<Map<String, dynamic>> wardrobe,
+  }) async {
+    if (!isConfigured) {
+      return const RecommendFailure(
+        code: 'NETWORK_ERROR',
+        message: 'No backend is configured. Set BACKEND_URL when building the app.',
+      );
+    }
+    try {
+      final resp = await _http
+          .post(
+            Uri.parse('$baseUrl/recommend/outfit'),
+            headers: {'content-type': 'application/json'},
+            body: json.encode({
+              'occasion': occasion,
+              'location': {
+                'latitude': latitude,
+                'longitude': longitude,
+                'label': placeLabel,
+              },
+              'body_profile': bodyProfile,
+              'color_profile': colorProfile,
+              'style_profile': styleProfile,
+              'wardrobe': wardrobe,
+            }),
+          )
+          .timeout(const Duration(seconds: 25));
+      final decoded = json.decode(resp.body);
+      if (resp.statusCode == 200) {
+        return RecommendSuccess(
+            OutfitRecommendation.fromJson(decoded as Map<String, dynamic>));
+      }
+      final error = (decoded as Map<String, dynamic>)['error'];
+      if (error is Map<String, dynamic>) {
+        return RecommendFailure(
+          code: error['code'] as String,
+          message: error['message'] as String,
+        );
+      }
+      return RecommendFailure(
+        code: 'NETWORK_ERROR',
+        message: 'The backend rejected the request (${resp.statusCode}).',
+      );
+    } on FormatException {
+      return const RecommendFailure(
+        code: 'NETWORK_ERROR',
+        message: 'The backend returned an unreadable response.',
+      );
+    } catch (_) {
+      return const RecommendFailure(
+        code: 'NETWORK_ERROR',
+        message: 'Could not reach the recommendation service. Check the connection and try again.',
+      );
+    }
   }
 
   Future<List<ModelStatus>> fetchModels() async {

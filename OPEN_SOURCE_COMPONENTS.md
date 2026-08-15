@@ -30,7 +30,7 @@ fashion_clip_text_onnx, fashion_clip_tokenizer — all Apache-2.0).
 | PyYAML | Registry parsing | MIT |
 | python-multipart | Multipart image uploads | BSD-3-Clause |
 | pytest (dev) | Tests | MIT |
-| httpx (dev) | Test client | BSD-3-Clause |
+| httpx | Test client; live Open-Meteo weather fetch (Phase 3, promoted from dev) | BSD-3-Clause |
 
 ## MediaPipe model weights
 

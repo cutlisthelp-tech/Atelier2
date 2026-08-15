@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from app.config import APP_NAME, APP_VERSION, feature_flags
 from app.errors import AtelierError, FailureState, error_envelope
 from app.models.manager import RegistryEntryError, manager
-from app.routers import analysis
+from app.routers import analysis, recommend
 
 _started_at = time.monotonic()
 
@@ -41,6 +41,7 @@ def create_app() -> FastAPI:
         return JSONResponse(status_code=status, content=error_envelope(exc.state, exc.message))
 
     app.include_router(analysis.router)
+    app.include_router(recommend.router)
 
     @app.get("/health")
     async def health() -> dict:

@@ -1,6 +1,6 @@
 # API
 
-Base: FastAPI app (`backend/app/main.py`). Version 0.0.0 (Phase 1 + 2).
+Base: FastAPI app (`backend/app/main.py`). Version 0.0.0 (Phase 1 + 2 + 3).
 
 ## `GET /health`
 
@@ -121,6 +121,100 @@ Backend Model Manager status report from `models/registry.yaml`.
   "runtime": "mediapipe", "hardware": "cpu", "license": "Apache-2.0",
   "installed": true, "loaded": false } ] }
 ```
+
+## `POST /recommend/outfit` — Phase 3
+
+JSON body. The backend is stateless: the client sends its real profiles and
+its photographed wardrobe verbatim with every request.
+
+Request:
+
+```json
+{
+  "occasion": "dinner",
+  "location": { "latitude": 33.5731, "longitude": -7.5898, "label": "Casablanca" },
+  "body_profile": { "…": "/analysis/body response, verbatim" },
+  "color_profile": { "…": "/analysis/appearance response, verbatim, or null" },
+  "style_profile": {
+    "height_cm": 178, "fit_preference": "regular",
+    "aesthetics": ["minimal"], "banned_colors": [], "banned_brands": [],
+    "budget_ceiling": null
+  },
+  "wardrobe": [
+    { "id": "g-sweater", "garment": { "…": "/analysis/garment `garment` object, embedding stripped" },
+      "confidence": 0.846, "flags": [] }
+  ]
+}
+```
+
+`occasion` must be one of the 13 fixed occasions (`casual lunch`,
+`university`, `office`, `interview`, `wedding`, `date`, `dinner`, `party`,
+`travel`, `beach`, `gym`, `shopping`, `formal`); anything else is a plain
+`422` validation error, as is an out-of-range latitude/longitude.
+
+Success `200`:
+
+```json
+{
+  "context": {
+    "occasion": "dinner",
+    "place_label": "Casablanca",
+    "weather": { "state": "ok", "temperature_c": 22.3, "precipitation_mm": 0.0,
+      "weather_code": 2, "weather_label": "partly cloudy", "wind_kmh": 5.0,
+      "observed_at": "2026-08-15T04:45" }
+  },
+  "factors": [
+    { "name": "body_fit", "base_weight": 18.0, "effective_weight": 20.0,
+      "active": true, "inactive_reason": null, "score": 0.8, "contribution": 16.0 },
+    { "name": "trend", "base_weight": 6.0, "effective_weight": 0.0,
+      "active": false, "inactive_reason": "no trend feed is connected",
+      "score": 0.0, "contribution": 0.0 }
+  ],
+  "outfits": [
+    { "strategy": "best_match", "score": 71.1,
+      "garments": [ { "id": "g-sweater", "category": "sweater",
+        "colors": [ { "name": "charcoal", "hex": "#2f3234", "share": 0.436 } ],
+        "fit": "oversized", "material": null, "pattern": null } ],
+      "why": [ "Fit tracks your preference (67% across the pieces)." ] }
+  ],
+  "excluded": {
+    "hard_filters": [ { "id": "g-x", "reason": "banned color: charcoal" } ],
+    "unplaceable": [ { "id": "g-hanger", "reason": "category unknown" } ],
+    "filters_note": "…"
+  },
+  "shopping": { "state": "CATALOG_NOT_CONNECTED",
+    "message": "No merchant catalog is connected yet…" }
+}
+```
+
+Transparency rules:
+
+- All **10 ranking factors** (docs/PRODUCT_SPEC.md §6: body_fit 18,
+  proportion 14, style 14, color_harmony 12, occasion 10, user_preference 8,
+  appearance 8, weather 6, trend 6, budget 4) are reported with base weight,
+  effective weight, activity, score and contribution. Trend, Budget and
+  User Preference are **inactive by design** in Phase 3 (no trend feed, no
+  prices on photographed garments, no feedback log) with those exact reasons;
+  effective weights of active factors are redistributed so they always sum
+  to 100. `score == Σ contribution`.
+- **Weather** comes live from Open-Meteo (see `DATA_SOURCES.md`). If it is
+  unreachable the response still succeeds with
+  `weather.state = "WEATHER_UNAVAILABLE"` and the weather factor inactive —
+  never a canned temperature.
+- **Alternatives** (`strategy`: `best_match` / `safer` / `trend_forward` /
+  `bold`) are reported only when the wardrobe actually supports them — never
+  padded to four.
+- Garments with `category.value == null` are excluded as `unplaceable` and
+  reported, never guessed into a slot.
+- Hard filters run before scoring: `banned_colors` against the real returned
+  color names (case-insensitive); `banned_brands` is applied-but-no-data and
+  `budget_ceiling` is not applicable to photographed garments — both said so
+  in `filters_note`.
+
+Failures: `422` envelope `INSUFFICIENT_DATA` when the wardrobe (after hard
+filters) cannot assemble any outfit — the message names what is actually
+missing (e.g. shoes). Plain `422` for request validation. `503` only for
+genuine service faults.
 
 ## Error envelope
 

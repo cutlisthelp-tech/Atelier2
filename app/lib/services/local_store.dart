@@ -127,3 +127,141 @@ class StyleProfileStore {
   Future<void> save(StyleProfile profile) =>
       _store.write(_key, json.encode(profile.toJson()));
 }
+
+/// A raw analysis payload plus its capture time, stored losslessly so what
+/// the app sends back for scoring is byte-for-byte what the backend produced.
+class ScanRecord {
+  const ScanRecord({required this.payload, required this.capturedAt});
+
+  final Map<String, dynamic> payload;
+  final DateTime capturedAt;
+
+  Map<String, dynamic> toJson() => {
+        'payload': payload,
+        'captured_at': capturedAt.toUtc().toIso8601String(),
+      };
+
+  factory ScanRecord.fromJson(Map<String, dynamic> json) => ScanRecord(
+        payload: json['payload'] as Map<String, dynamic>,
+        capturedAt: DateTime.parse(json['captured_at'] as String),
+      );
+}
+
+class ScanRecordStore {
+  ScanRecordStore(this._store, this._key);
+
+  static ScanRecordStore body(KeyValueStore store) =>
+      ScanRecordStore(store, 'body_scan_v1');
+  static ScanRecordStore appearance(KeyValueStore store) =>
+      ScanRecordStore(store, 'appearance_scan_v1');
+
+  final KeyValueStore _store;
+  final String _key;
+
+  Future<ScanRecord?> load() async {
+    final raw = await _store.read(_key);
+    if (raw == null) return null;
+    return ScanRecord.fromJson(json.decode(raw) as Map<String, dynamic>);
+  }
+
+  Future<void> save(Map<String, dynamic> payload) => _store.write(
+      _key,
+      json.encode(ScanRecord(
+        payload: payload,
+        capturedAt: DateTime.now().toUtc(),
+      ).toJson()));
+}
+
+/// Phase 3 borrows minimal wardrobe persistence (analysis JSON only — user
+/// captures are never written to disk, BUILD_PLAN §5). Phase 7 owns the
+/// full Wardrobe module.
+class WardrobeItem {
+  const WardrobeItem({
+    required this.id,
+    required this.addedAt,
+    required this.payload,
+  });
+
+  final String id;
+  final DateTime addedAt;
+  final Map<String, dynamic> payload;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'added_at': addedAt.toUtc().toIso8601String(),
+        'payload': payload,
+      };
+
+  factory WardrobeItem.fromJson(Map<String, dynamic> json) => WardrobeItem(
+        id: json['id'] as String,
+        addedAt: DateTime.parse(json['added_at'] as String),
+        payload: json['payload'] as Map<String, dynamic>,
+      );
+}
+
+class WardrobeStore {
+  WardrobeStore(this._store);
+
+  static const _key = 'wardrobe_v1';
+  final KeyValueStore _store;
+  int _counter = 0;
+
+  Future<List<WardrobeItem>> loadAll() async {
+    final raw = await _store.read(_key);
+    if (raw == null) return [];
+    return (json.decode(raw) as List<dynamic>)
+        .map((e) => WardrobeItem.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<WardrobeItem> add(Map<String, dynamic> payload) async {
+    final items = await loadAll();
+    final item = WardrobeItem(
+      id: '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}-${_counter++}',
+      addedAt: DateTime.now().toUtc(),
+      payload: payload,
+    );
+    await _store.write(_key, json.encode([...items, item].map((e) => e.toJson()).toList()));
+    return item;
+  }
+
+  Future<void> remove(String id) async {
+    final items = await loadAll();
+    await _store.write(
+        _key,
+        json.encode(
+            items.where((e) => e.id != id).map((e) => e.toJson()).toList()));
+  }
+}
+
+class HomePlace {
+  const HomePlace({required this.label, required this.latitude, required this.longitude});
+
+  final String label;
+  final double latitude;
+  final double longitude;
+
+  Map<String, dynamic> toJson() =>
+      {'label': label, 'latitude': latitude, 'longitude': longitude};
+
+  factory HomePlace.fromJson(Map<String, dynamic> json) => HomePlace(
+        label: json['label'] as String,
+        latitude: (json['latitude'] as num).toDouble(),
+        longitude: (json['longitude'] as num).toDouble(),
+      );
+}
+
+class HomePlaceStore {
+  HomePlaceStore(this._store);
+
+  static const _key = 'home_place_v1';
+  final KeyValueStore _store;
+
+  Future<HomePlace?> load() async {
+    final raw = await _store.read(_key);
+    if (raw == null) return null;
+    return HomePlace.fromJson(json.decode(raw) as Map<String, dynamic>);
+  }
+
+  Future<void> save(HomePlace place) => _store.write(_key, json.encode(place.toJson()));
+}

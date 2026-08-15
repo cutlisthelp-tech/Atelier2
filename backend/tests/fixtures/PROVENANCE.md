@@ -18,6 +18,8 @@ Machine-readable copy: `provenance.json`.
 | landscape.jpg | File:An Alpine Landscape NZ.jpg | CC0 | Bernard Spragg, NZ |
 | garment_hanger.jpg | File:White dressers on hangers (Unsplash).jpg | CC0 | Celia Michon (Unsplash: celiamichon) |
 | garment_checkered.jpg | File:Checkered Sweater H&M.jpg | CC BY-SA 4.0 | Kauey |
+| garment_jeans.jpg | File:Women's Levi's jeans inside out.jpg | CC BY-SA 4.0 | 1Veertje |
+| garment_sneakers.jpg | File:2023 Adidas Yeezy 350 V2 EF2905 (1).jpg | CC BY-SA 4.0 | Jacek Halicki |
 
 Source pages:
 
@@ -27,6 +29,8 @@ Source pages:
 - https://commons.wikimedia.org/wiki/File%3AAn_Alpine_Landscape_NZ.jpg
 - https://commons.wikimedia.org/wiki/File%3AWhite_dressers_on_hangers_%28Unsplash%29.jpg
 - https://commons.wikimedia.org/wiki/File%3ACheckered_Sweater_H%26M.jpg
+- https://commons.wikimedia.org/wiki/File%3AWomen%27s_Levi%27s_jeans_inside_out.jpg
+- https://commons.wikimedia.org/wiki/File%3A2023_Adidas_Yeezy_350_V2_EF2905_%281%29.jpg
 
 Downloaded 2026-08-14 via the Wikimedia Commons API. The dark/blurry variants
 used in tests are derived in memory from these real photos at test time.

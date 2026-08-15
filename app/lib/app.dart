@@ -20,12 +20,14 @@ class AtelierApp extends StatefulWidget {
     this.consentStore,
     this.styleStore,
     this.backendClient,
+    this.keyValueStore,
   });
 
   final ModelManager? modelManager;
   final ConsentStore? consentStore;
   final StyleProfileStore? styleStore;
   final BackendClient? backendClient;
+  final KeyValueStore? keyValueStore;
 
   @override
   State<AtelierApp> createState() => _AtelierAppState();
@@ -33,13 +35,18 @@ class AtelierApp extends StatefulWidget {
 
 class _AtelierAppState extends State<AtelierApp> {
   late final ModelManager _modelManager = widget.modelManager ?? ModelManager();
-  late final KeyValueStore _store = FileKeyValueStore();
+  late final KeyValueStore _store = widget.keyValueStore ?? FileKeyValueStore();
   late final ConsentStore _consentStore =
       widget.consentStore ?? ConsentStore(_store);
   late final StyleProfileStore _styleStore =
       widget.styleStore ?? StyleProfileStore(_store);
   late final BackendClient _backendClient =
       widget.backendClient ?? BackendClient();
+  late final ScanRecordStore _bodyStore = ScanRecordStore.body(_store);
+  late final ScanRecordStore _appearanceStore =
+      ScanRecordStore.appearance(_store);
+  late final WardrobeStore _wardrobeStore = WardrobeStore(_store);
+  late final HomePlaceStore _homePlaceStore = HomePlaceStore(_store);
   int _tab = 0;
 
   @override
@@ -58,15 +65,28 @@ class _AtelierAppState extends State<AtelierApp> {
         body: IndexedStack(
           index: _tab,
           children: [
-            const HomeScreen(),
+            HomeScreen(
+              backendClient: _backendClient,
+              bodyStore: _bodyStore,
+              appearanceStore: _appearanceStore,
+              styleStore: _styleStore,
+              wardrobeStore: _wardrobeStore,
+              homePlaceStore: _homePlaceStore,
+              onOpenTab: (i) => setState(() => _tab = i),
+            ),
             const DiscoverScreen(),
             const TryOnScreen(),
-            WardrobeScreen(backendClient: _backendClient),
+            WardrobeScreen(
+              backendClient: _backendClient,
+              wardrobeStore: _wardrobeStore,
+            ),
             ProfileScreen(
               modelManager: _modelManager,
               consentStore: _consentStore,
               styleStore: _styleStore,
               backendClient: _backendClient,
+              bodyStore: _bodyStore,
+              appearanceStore: _appearanceStore,
             ),
           ],
         ),
