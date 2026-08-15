@@ -48,6 +48,19 @@ class BackendClient {
     return outcome.toFailure();
   }
 
+  Future<ScanOutcome> analyzeGarment(Uint8List image) async {
+    final outcome = await _post('/analysis/garment', image);
+    if (outcome case _Success(:final body)) {
+      return GarmentScanSuccess(
+        garment:
+            GarmentProfile.fromJson(body['garment'] as Map<String, dynamic>),
+        confidence: (body['confidence'] as num).toDouble(),
+        flags: (body['flags'] as List<dynamic>).cast<String>(),
+      );
+    }
+    return outcome.toFailure();
+  }
+
   Future<List<ModelStatus>> fetchModels() async {
     final uri = Uri.parse('$baseUrl/models');
     final resp = await _http.get(uri, headers: {'accept': 'application/json'});

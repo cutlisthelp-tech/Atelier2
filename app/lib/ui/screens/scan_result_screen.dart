@@ -32,6 +32,17 @@ class ScanResultScreen extends StatelessWidget {
             ),
           AppearanceScanSuccess(:final color, :final confidence) =>
             _ColorResult(color: color, confidence: confidence),
+          GarmentScanSuccess(
+            :final garment,
+            :final confidence,
+            :final flags
+          ) =>
+            _GarmentResult(
+              garment: garment,
+              confidence: confidence,
+              flags: flags,
+              capture: capture,
+            ),
           ScanFailure(:final code, :final message) => _Failure(code: code, message: message),
         },
       ),
@@ -212,6 +223,127 @@ class _ColorResult extends StatelessWidget {
   }
 }
 
+class _GarmentResult extends StatelessWidget {
+  const _GarmentResult({
+    required this.garment,
+    required this.confidence,
+    required this.flags,
+    this.capture,
+  });
+
+  final GarmentProfile garment;
+  final double confidence;
+  final List<String> flags;
+  final Uint8List? capture;
+
+  Color _parse(String hex) {
+    final v = int.parse(hex.replaceFirst('#', ''), radix: 16);
+    return Color(0xFF000000 | v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.unit * 3),
+      children: [
+        Text(
+          'Garment read',
+          style: AppType.display.copyWith(fontSize: 28, color: AppColors.textPrimary),
+        ),
+        const SizedBox(height: AppSpacing.unit),
+        _ConfidenceRow(confidence: confidence, flags: flags),
+        const SizedBox(height: AppSpacing.unit * 2),
+        if (capture != null)
+          AspectRatio(
+            aspectRatio: 3 / 4,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppSpacing.unit),
+              child: Image.memory(capture!, fit: BoxFit.cover),
+            ),
+          ),
+        const SizedBox(height: AppSpacing.unit * 3),
+        _Line(
+          'Category',
+          garment.category.value ?? 'Unknown',
+          note: garment.category.value == null
+              ? 'not confidently recognizable in this photo'
+              : null,
+        ),
+        _Line('Pattern', garment.pattern.value ?? 'Unknown',
+            note: garment.pattern.value == null
+                ? 'not reliably visible in this photo'
+                : null),
+        _Line('Fit', garment.fit.value ?? 'Unknown',
+            note: garment.fit.value == null
+                ? 'not reliably visible in this photo'
+                : null),
+        _Line('Material', garment.material.value ?? 'Unknown',
+            note: garment.material.value == null
+                ? 'not reliably visible in this photo'
+                : null),
+        const SizedBox(height: AppSpacing.unit * 3),
+        Text(
+          'COLORS',
+          style: AppType.data.copyWith(
+              fontSize: 11, letterSpacing: 1.4, color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppSpacing.unit),
+        if (garment.colors.isEmpty)
+          Text(
+            'No colors could be read from this photo.',
+            style: AppType.interface.copyWith(fontSize: 13, color: AppColors.textSecondary),
+          )
+        else
+          Wrap(
+            spacing: AppSpacing.unit * 1.5,
+            runSpacing: AppSpacing.unit * 1.5,
+            children: [
+              for (final c in garment.colors)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: _parse(c.hex),
+                        borderRadius: BorderRadius.circular(AppSpacing.half),
+                        border: Border.all(color: AppColors.borderSubtle),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.half),
+                    SizedBox(
+                      width: 72,
+                      child: Text(
+                        c.name,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppType.interface.copyWith(
+                            fontSize: 10, color: AppColors.textSecondary),
+                      ),
+                    ),
+                    Text(
+                      '${c.hex} · ${(c.share * 100).round()}%',
+                      style: AppType.data.copyWith(
+                          fontSize: 10, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        const SizedBox(height: AppSpacing.unit * 2),
+        Text(
+          garment.colorsSource == 'segmentation'
+              ? 'Colors read from the clothing region of this photo.'
+              : 'Colors read from the center of this photo — no worn clothing region was detected.',
+          style: AppType.interface.copyWith(fontSize: 12, color: AppColors.textSecondary),
+        ),
+      ],
+    );
+  }
+}
+
 class _Failure extends StatelessWidget {
   const _Failure({required this.code, required this.message});
 
@@ -358,21 +490,33 @@ class _Ratio extends StatelessWidget {
 }
 
 class _Line extends StatelessWidget {
-  const _Line(this.label, this.value);
+  const _Line(this.label, this.value, {this.note});
 
   final String label;
   final String value;
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.half),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Text(
-              label,
-              style: AppType.interface.copyWith(fontSize: 15, color: AppColors.textSecondary),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppType.interface.copyWith(fontSize: 15, color: AppColors.textSecondary),
+                ),
+                if (note != null)
+                  Text(
+                    note!,
+                    style: AppType.interface.copyWith(fontSize: 11, color: AppColors.textSecondary),
+                  ),
+              ],
             ),
           ),
           Text(

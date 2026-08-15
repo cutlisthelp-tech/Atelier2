@@ -16,6 +16,8 @@ Machine-readable copy: `provenance.json`.
 | body_yoga.jpg | File:Chakrasana wheel pose yoga.jpg | CC BY 2.0 | Perzonseo Webbyra |
 | face_portrait.jpg | File:Boy Face from Venezuela.jpg | CC0 | Wilfredor |
 | landscape.jpg | File:An Alpine Landscape NZ.jpg | CC0 | Bernard Spragg, NZ |
+| garment_hanger.jpg | File:White dressers on hangers (Unsplash).jpg | CC0 | Celia Michon (Unsplash: celiamichon) |
+| garment_checkered.jpg | File:Checkered Sweater H&M.jpg | CC BY-SA 4.0 | Kauey |
 
 Source pages:
 
@@ -23,6 +25,8 @@ Source pages:
 - https://commons.wikimedia.org/wiki/File%3AChakrasana_wheel_pose_yoga.jpg
 - https://commons.wikimedia.org/wiki/File%3ABoy_Face_from_Venezuela.jpg
 - https://commons.wikimedia.org/wiki/File%3AAn_Alpine_Landscape_NZ.jpg
+- https://commons.wikimedia.org/wiki/File%3AWhite_dressers_on_hangers_%28Unsplash%29.jpg
+- https://commons.wikimedia.org/wiki/File%3ACheckered_Sweater_H%26M.jpg
 
 Downloaded 2026-08-14 via the Wikimedia Commons API. The dark/blurry variants
 used in tests are derived in memory from these real photos at test time.

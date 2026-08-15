@@ -1,8 +1,9 @@
 # Open-Source Components
 
 Everything integrated into Atelier is tracked here with its license. Models are
-tracked in `models/registry.yaml` (currently: pose_landmarker_full and
-face_landmarker, both Apache-2.0).
+tracked in `models/registry.yaml` (currently: pose_landmarker_full,
+face_landmarker, selfie_multiclass_256x256, fashion_clip_vision_onnx,
+fashion_clip_text_onnx, fashion_clip_tokenizer — all Apache-2.0).
 
 ## App dependencies (`app/pubspec.yaml`)
 
@@ -22,8 +23,10 @@ face_landmarker, both Apache-2.0).
 |---|---|---|
 | FastAPI | API gateway | MIT |
 | Uvicorn | ASGI server | BSD-3-Clause |
-| mediapipe | Pose + face landmark inference, CPU (Phase 1) | Apache-2.0 |
+| mediapipe | Pose + face landmark inference, CPU (Phase 1); clothing mask for garment colors (Phase 2) | Apache-2.0 |
 | opencv-python-headless | Image decode + quality gates; headless = no libGL/X11 (Phase 1) | Apache-2.0 |
+| onnxruntime | Marqo-fashionCLIP vision/text encoders, CPU (Phase 2) | MIT |
+| tokenizers | BPE tokenizer for marqo-fashionCLIP (Phase 2) | Apache-2.0 |
 | PyYAML | Registry parsing | MIT |
 | python-multipart | Multipart image uploads | BSD-3-Clause |
 | pytest (dev) | Tests | MIT |
@@ -34,5 +37,16 @@ face_landmarker, both Apache-2.0).
 Served from `storage.googleapis.com/mediapipe-models` under the
 google-ai-edge/mediapipe Apache-2.0 terms. Checksums recorded in
 `models/registry.yaml`.
+
+## Fashion embedding weights (Phase 2)
+
+Marqo-fashionCLIP (ViT-B-16, 512-dim) ONNX int8 exports + BPE tokenizer,
+served from Hugging Face `Marqo/marqo-fashionCLIP` (Apache-2.0, revision
+44f4c655). Checksums recorded in `models/registry.yaml`.
+
+Evaluated and rejected: **FASHN Human Parser** — ships under the NVIDIA
+Source Code License for SegFormer, which is not commercially safe
+(AGENTS.md rule 3). **Marqo-fashionSigLIP** remains an upgrade candidate
+(Apache-2.0) but needs a PyTorch runtime; recorded in `MODEL_SETUP.md`.
 
 Verify licenses against upstream before adding anything new.

@@ -1,7 +1,8 @@
-"""Analysis endpoints — Phase 1 (BUILD_PLAN §1).
+"""Analysis endpoints — Phase 1 + 2 (BUILD_PLAN §1).
 
 POST /analysis/body        image + height_cm → BodyProfile
 POST /analysis/appearance  image → ColorProfile
+POST /analysis/garment     image → GarmentRepresentation
 GET  /models               backend ModelManager status report
 
 Image bytes stay in request memory; they are never written to disk and never
@@ -11,7 +12,7 @@ logged (BUILD_PLAN §5).
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from app.models.manager import RegistryEntryError, manager
-from app.services import appearance_service, body_service
+from app.services import appearance_service, body_service, garment_service
 
 router = APIRouter()
 
@@ -43,6 +44,12 @@ async def analysis_body(file: UploadFile = File(...), height_cm: float = Form(..
 async def analysis_appearance(file: UploadFile = File(...)) -> dict:
     data = await _read_image(file)
     return appearance_service.analyze_appearance(data)
+
+
+@router.post("/analysis/garment")
+async def analysis_garment(file: UploadFile = File(...)) -> dict:
+    data = await _read_image(file)
+    return garment_service.analyze_garment(data)
 
 
 @router.get("/models")

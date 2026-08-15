@@ -1,6 +1,6 @@
 # API
 
-Base: FastAPI app (`backend/app/main.py`). Version 0.0.0 (Phase 1).
+Base: FastAPI app (`backend/app/main.py`). Version 0.0.0 (Phase 1 + 2).
 
 ## `GET /health`
 
@@ -70,6 +70,47 @@ Success `200`:
 
 Failure codes follow the same contract as `/analysis/body`; too few usable
 skin samples is `INSUFFICIENT_DATA`.
+
+## `POST /analysis/garment` — Phase 2
+
+Multipart form: `file` only (≤15 MB, never persisted or logged). Zero-shot
+classification with Marqo-fashionCLIP (ONNX int8, CPU) over a fixed taxonomy;
+dominant colors from deterministic k-means clustering confined to a MediaPipe
+selfie_multiclass clothing mask when someone wears the garment, otherwise a
+center-weighted crop (`colors_source` says which).
+
+Success `200`:
+
+```json
+{
+  "garment": {
+    "category": { "value": "sweater", "confidence": 0.818 },
+    "colors": [ { "name": "charcoal", "hex": "#2f3234", "share": 0.436 } ],
+    "colors_source": "segmentation",
+    "clothing_mask_share": 0.3989,
+    "pattern": { "value": null, "confidence": 0.31 },
+    "fit": { "value": "oversized", "confidence": 0.503 },
+    "material": { "value": null, "confidence": 0.29 },
+    "embedding": [ 0.012345 ]
+  },
+  "confidence": 0.846,
+  "flags": []
+}
+```
+
+Honesty contract: `category.value` is `null` when the top category confidence
+is below 0.5 (a garment is present but not confidently nameable); each of
+`pattern`/`fit`/`material` is `null` below its own 0.35 threshold — never
+guessed. Top category below 0.35 means no recognizable garment:
+`INSUFFICIENT_DATA`. `embedding` is the 512-dim fashionCLIP vision vector for
+later Wardrobe/visual-search reuse; nothing stores it yet.
+
+Color naming is deterministic RGB→name rules (black/white/gray/charcoal/
+light gray/brown/beige/red/burgundy/orange/olive/yellow/green/olive green/
+teal/navy/light blue/blue/lavender/purple/pink/magenta) on the k-means
+centers; `share` is the cluster's share of sampled pixels.
+
+Failures follow the same 422/503 contract as `/analysis/body`.
 
 ## `GET /models` — Phase 1
 

@@ -5,10 +5,18 @@ import '../../theme/tokens.dart';
 /// Honest empty state — an invitation to act, never a dead end and never
 /// a fake placeholder (docs/DESIGN_SYSTEM.md §6).
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, required this.title, required this.message});
+  const EmptyState({
+    super.key,
+    required this.title,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
 
   final String title;
   final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +44,23 @@ class EmptyState extends StatelessWidget {
                 color: AppColors.textSecondary,
               ),
             ),
+            if (actionLabel != null) ...[
+              const SizedBox(height: AppSpacing.unit * 3),
+              SizedBox(
+                height: AppSpacing.minTapTarget,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.textPrimary,
+                    foregroundColor: AppColors.surfacePrimary,
+                  ),
+                  onPressed: onAction,
+                  child: Text(
+                    actionLabel!,
+                    style: AppType.interface.copyWith(fontSize: 15),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

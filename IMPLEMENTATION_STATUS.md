@@ -52,9 +52,53 @@ Honest limits of this verification:
 ## Known deferrals (recorded, not silent)
 
 On-device inference migration; full streaming Constellation Scan animation;
-person segmentation model; chest/waist depth measurements; Style Profile
-remote sync (Phase 9).
+chest/waist depth measurements; Style Profile remote sync (Phase 9);
+salient-object segmentation for busy flat-lay backgrounds (Phase 7/8);
+garment embedding storage + pgvector indexing (Phase 8); wardrobe item
+persistence (Phase 7); Marqo-fashionSigLIP upgrade (Phase 8).
 
-## Phases 2–10
+## Phase 2 — Garment Analysis
+
+**Status: VERIFIED — 2026-08-15**
+
+Definition of Done: *a garment photo returns real category/color/attributes,
+or "Unknown".*
+
+Evidence:
+
+- Models re-verified per AGENTS.md rule 3 before integration:
+  Marqo-fashionCLIP (Apache-2.0, active repo, public ONNX int8 weights,
+  CPU-fast) selected; FASHN Human Parser rejected (NVIDIA SegFormer license);
+  FashionSigLIP recorded as upgrade. Four new registry entries with real
+  SHA-256 checksums; backend Model Manager lifecycle unchanged.
+- `pytest` — 20/20 passed on **real fixture photos** (provenance in
+  `backend/tests/fixtures/`): worn checkered sweater → real category
+  `sweater` 0.818, real colors from the selfie_multiclass clothing mask
+  (charcoal/white/gray), fit `oversized` (matches the photo's own Commons
+  description), 512-dim embedding, confidence 0.846; dresses-on-hangers →
+  garment present but category honestly `null` (0.445) with real colors;
+  landscape → `INSUFFICIENT_DATA`; darkened photo → `POOR_IMAGE`; garbage
+  bytes → `POOR_IMAGE`.
+- Live `uvicorn` smoke — `POST /analysis/garment` on both fixtures and the
+  landscape returned exactly the test payloads; `GET /models` reports all six
+  models installed.
+- `flutter analyze` — no issues. `flutter test` — 13/13 passed: garment
+  result screen renders real attributes, `UNKNOWN` plus the why for
+  unconfident attributes, §12 failure codes; WARDROBE tab opens the garment
+  scan; missing camera reported honestly.
+- `flutter build apk --debug` — `app-debug.apk` produced.
+- Mock-data audit — zero fabricated values; prompt sets and color-name rules
+  are documented configuration, every displayed number comes from a real
+  model run.
+
+Honest limits of this verification:
+
+- Camera capture happens on the maintainer's Android/Termux flow; the
+  pipeline is verified end-to-end from real photos through the same endpoint
+  the app calls.
+- Pattern/material/fit are honest zero-shot reads with per-attribute
+  thresholds — expect `Unknown` often on flat-lays. That is the DoD working.
+
+## Phases 3–10
 
 Not started. No feature flags are enabled.

@@ -124,6 +124,85 @@ class ScanFailure extends ScanOutcome {
   final String message;
 }
 
+/// One garment attribute from the Phase 2 pipeline. A null [value] is the
+/// honest "Unknown" — the model was not confident enough to name it.
+class GarmentAttribute {
+  const GarmentAttribute({required this.value, required this.confidence});
+
+  final String? value;
+  final double confidence;
+
+  factory GarmentAttribute.fromJson(Map<String, dynamic> json) =>
+      GarmentAttribute(
+        value: json['value'] as String?,
+        confidence: (json['confidence'] as num).toDouble(),
+      );
+}
+
+class GarmentColor {
+  const GarmentColor({
+    required this.name,
+    required this.hex,
+    required this.share,
+  });
+
+  final String name;
+  final String hex;
+  final double share;
+
+  factory GarmentColor.fromJson(Map<String, dynamic> json) => GarmentColor(
+        name: json['name'] as String,
+        hex: json['hex'] as String,
+        share: (json['share'] as num).toDouble(),
+      );
+}
+
+class GarmentProfile {
+  const GarmentProfile({
+    required this.category,
+    required this.colors,
+    required this.colorsSource,
+    required this.pattern,
+    required this.fit,
+    required this.material,
+  });
+
+  final GarmentAttribute category;
+  final List<GarmentColor> colors;
+
+  /// "segmentation" (clothing mask) or "center_weighted" (flat-lay fallback).
+  final String colorsSource;
+  final GarmentAttribute pattern;
+  final GarmentAttribute fit;
+  final GarmentAttribute material;
+
+  factory GarmentProfile.fromJson(Map<String, dynamic> json) => GarmentProfile(
+        category: GarmentAttribute.fromJson(
+            json['category'] as Map<String, dynamic>),
+        colors: (json['colors'] as List<dynamic>)
+            .map((c) => GarmentColor.fromJson(c as Map<String, dynamic>))
+            .toList(),
+        colorsSource: json['colors_source'] as String,
+        pattern: GarmentAttribute.fromJson(
+            json['pattern'] as Map<String, dynamic>),
+        fit: GarmentAttribute.fromJson(json['fit'] as Map<String, dynamic>),
+        material: GarmentAttribute.fromJson(
+            json['material'] as Map<String, dynamic>),
+      );
+}
+
+class GarmentScanSuccess extends ScanOutcome {
+  const GarmentScanSuccess({
+    required this.garment,
+    required this.confidence,
+    required this.flags,
+  });
+
+  final GarmentProfile garment;
+  final double confidence;
+  final List<String> flags;
+}
+
 class ModelStatus {
   const ModelStatus({
     required this.name,

@@ -61,7 +61,7 @@ class _AtelierAppState extends State<AtelierApp> {
             const HomeScreen(),
             const DiscoverScreen(),
             const TryOnScreen(),
-            const WardrobeScreen(),
+            WardrobeScreen(backendClient: _backendClient),
             ProfileScreen(
               modelManager: _modelManager,
               consentStore: _consentStore,
