@@ -2,11 +2,11 @@
 
 ## Project Identity — Read This First
 
-This is a **brand-new, clean repository** for Atelier, a personal fashion intelligence app.
+This is the **canonical, official repository** for Atelier, a personal fashion intelligence app.
 
-- Repo: `khalilblm2-droid/Atelier` — independent from any prior workspace.
-- Do **not** reuse, copy, migrate, inspect-for-functionality, or inherit code, APKs, build artifacts, databases, credentials, or temp data from `Vanta_os1`, `Voyra`, or any earlier `Atelier` workspace — unless a task explicitly asks you to reference one of them.
-- Start at Phase 0. This file, plus `docs/`, is the source of truth. If an instruction conflicts with the constitution, stop and resolve the conflict before writing code — don't silently reinterpret it.
+- Repo: `cutlisthelp-tech/Atelier2` — canonical as of 2026-08-16, migrated from `khalilblm2-droid/Atelier`.
+- The old `khalilblm2-droid/Atelier` repository is **deprecated and frozen** at its 2026-08-16 state. Do **not** pull further work, commits, or features from it, and do **not** reuse, copy, migrate, inspect-for-functionality, or inherit code, APKs, build artifacts, databases, credentials, or temp data from it or from `Vanta_os1`, `Voyra`, or any other earlier workspace — unless a task explicitly asks you to reference one of them.
+- This file, plus `docs/`, is the source of truth. If an instruction conflicts with the constitution, stop and resolve the conflict before writing code — don't silently reinterpret it.
 
 ## Product Identity
 

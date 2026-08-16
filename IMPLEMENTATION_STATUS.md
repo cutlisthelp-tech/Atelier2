@@ -4,6 +4,15 @@ Source of truth for what is *verified working*, per `docs/BUILD_PLAN.md §1`
 — a phase is done only when its Definition of Done is demonstrated, not when
 it compiles.
 
+## Repository migration — 2026-08-16
+
+The project migrated from `khalilblm2-droid/Atelier` to
+`cutlisthelp-tech/Atelier2` (this repository), the canonical, official home
+of Atelier. The old repository is **deprecated and frozen** at its
+2026-08-16 state — do not pull further work from it. All phase evidence
+recorded here was re-verified in this repository on the migration date (see
+the 2026-08-16 entries below).
+
 ## Phase 0 — Infrastructure, feature flags, Model Manager skeleton, Diagnostics
 
 **Status: VERIFIED — 2026-08-14**
