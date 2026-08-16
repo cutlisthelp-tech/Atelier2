@@ -20,6 +20,8 @@ Machine-readable copy: `provenance.json`.
 | garment_checkered.jpg | File:Checkered Sweater H&M.jpg | CC BY-SA 4.0 | Kauey |
 | garment_jeans.jpg | File:Women's Levi's jeans inside out.jpg | CC BY-SA 4.0 | 1Veertje |
 | garment_sneakers.jpg | File:2023 Adidas Yeezy 350 V2 EF2905 (1).jpg | CC BY-SA 4.0 | Jacek Halicki |
+| garment_tshirt.jpg | File:T-shirt mockup.jpg | CC BY-SA 4.0 | FFMAAS |
+| garment_shorts.jpg | File:Men's Shorts - Old Bull Lee - Orange.jpg | CC BY-SA 3.0 | OldBullLeeWasHere |
 
 Source pages:
 
@@ -31,6 +33,10 @@ Source pages:
 - https://commons.wikimedia.org/wiki/File%3ACheckered_Sweater_H%26M.jpg
 - https://commons.wikimedia.org/wiki/File%3AWomen%27s_Levi%27s_jeans_inside_out.jpg
 - https://commons.wikimedia.org/wiki/File%3A2023_Adidas_Yeezy_350_V2_EF2905_%281%29.jpg
+- https://commons.wikimedia.org/wiki/File%3AT-shirt_mockup.jpg
+- https://commons.wikimedia.org/wiki/File%3AMen%27s_Shorts_-_Old_Bull_Lee_-_Orange.jpg
 
-Downloaded 2026-08-14 via the Wikimedia Commons API. The dark/blurry variants
-used in tests are derived in memory from these real photos at test time.
+Downloaded 2026-08-14 via the Wikimedia Commons API (the two Phase 6 fixtures
+on 2026-08-16, downscaled to 1200px at download time, content unchanged). The
+dark/blurry variants used in tests are derived in memory from these real
+photos at test time.

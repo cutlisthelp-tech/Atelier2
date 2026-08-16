@@ -139,6 +139,56 @@ MATERIAL_TEMP_BANDS: dict[str, tuple[float, float]] = {
 
 FIT_SCALE = ("slim", "regular", "relaxed", "oversized")
 
+# Phase 6 occasion depth — documented styling conventions (same status as the
+# suitability tables): how formal each occasion reads, 0..1.
+OCCASION_FORMALITY: dict[str, float] = {
+    "casual lunch": 0.3, "university": 0.4, "office": 0.8, "interview": 0.9,
+    "wedding": 0.9, "date": 0.7, "dinner": 0.8, "party": 0.6, "travel": 0.3,
+    "beach": 0.1, "gym": 0.1, "shopping": 0.3, "formal": 1.0,
+}
+
+# How loudly a pattern/fit clashes with a formal read, 0..1.
+PATTERN_FORMALITY_PENALTY: dict[str, float] = {
+    "solid": 0.0, "floral": 0.0, "striped": 0.1, "polka dot": 0.1,
+    "plaid": 0.2, "animal print": 0.4, "graphic": 0.6, "camouflage": 0.7,
+}
+FIT_FORMALITY_PENALTY: dict[str, float] = {
+    "slim": 0.0, "regular": 0.0, "relaxed": 0.2, "oversized": 0.5,
+}
+
+
+def formality_piece(occasion: str, pattern: str | None, fit: str | None) -> float:
+    """1.0 when the piece's pattern/fit sit comfortably within the occasion's
+    formality; scaled down by the documented penalties otherwise."""
+    formality = OCCASION_FORMALITY[occasion]
+    penalty = min(
+        1.0,
+        PATTERN_FORMALITY_PENALTY.get(pattern or "solid", 0.3)
+        + FIT_FORMALITY_PENALTY.get(fit or "regular", 0.1),
+    )
+    return max(0.0, 1.0 - formality * penalty)
+
+
+# Comfort anchor for weather severity (°C) and full-rain threshold (mm).
+COMFORT_ANCHOR_C = 21.0
+TEMP_SEVERITY_SPAN_C = 15.0
+FULL_RAIN_MM = 2.0
+
+
+def weather_severity(weather: dict) -> float:
+    """0..1 — how hard the conditions push on the wardrobe. Documented rule:
+    the Weather factor's base weight scales by (1 + severity)."""
+    if weather.get("state") != "ok":
+        return 0.0
+    temp = weather.get("temperature_c")
+    temp_sev = (
+        min(abs(temp - COMFORT_ANCHOR_C) / TEMP_SEVERITY_SPAN_C, 1.0)
+        if temp is not None
+        else 0.0
+    )
+    precip_sev = min((weather.get("precipitation_mm") or 0.0) / FULL_RAIN_MM, 1.0)
+    return max(temp_sev, precip_sev)
+
 AESTHETIC_CATEGORY_AFFINITY: dict[str, frozenset[str]] = {
     "minimal": frozenset({"t-shirt", "shirt", "trousers", "sweater", "coat", "shoes"}),
     "classic": frozenset({"shirt", "blouse", "trousers", "skirt", "dress", "suit", "shoes", "belt"}),

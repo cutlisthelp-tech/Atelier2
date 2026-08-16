@@ -214,6 +214,17 @@ Transparency rules:
   color names (case-insensitive); `banned_brands` is applied-but-no-data and
   `budget_ceiling` is not applicable to photographed garments — both said so
   in `filters_note`.
+- **Phase 6 context depth.** The Occasion factor blends category suitability
+  (70%) with a documented formality fit (30%): each occasion carries a
+  0..1 formality read, and loud patterns/fits (graphic, camouflage,
+  oversized…) are scaled down by it. The Weather factor's base weight scales
+  by ×(1 + severity), severity = max(|t − 21°C|/15, precipitation/2mm),
+  capped at 1 — harsh conditions genuinely move the ranking; `base_weight`
+  in the report stays 6.0 while `effective_weight` carries the scaling.
+  Both rules are deterministic configuration (summarized in
+  `occasion_service.py`), verified by context-flip tests: HOT vs COLD and
+  dinner vs gym reorder the same real wardrobe for different, traceable
+  reasons.
 
 Failures: `422` envelope `INSUFFICIENT_DATA` when the wardrobe (after hard
 filters) cannot assemble any outfit — the message names what is actually

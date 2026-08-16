@@ -107,10 +107,23 @@ def active_factors(color_profile: dict | None, weather: dict) -> dict[str, tuple
     return factors
 
 
-def effective_weights(factors: dict[str, tuple[bool, str | None]]) -> dict[str, float]:
-    active_sum = sum(w for name, w in BASE_WEIGHTS.items() if factors[name][0])
+def context_weights(weather: dict) -> dict[str, float]:
+    """Phase 6 depth: harsh conditions push the Weather factor harder —
+    base weight scales by (1 + severity), documented in API.md. Base weights
+    in the report stay the §6 table; effective weights carry the scaling."""
+    weights = dict(BASE_WEIGHTS)
+    weights["weather"] = BASE_WEIGHTS["weather"] * (1.0 + occ.weather_severity(weather))
+    return weights
+
+
+def effective_weights(
+    factors: dict[str, tuple[bool, str | None]],
+    weights: dict[str, float] | None = None,
+) -> dict[str, float]:
+    weights = weights if weights is not None else BASE_WEIGHTS
+    active_sum = sum(w for name, w in weights.items() if factors[name][0])
     out = {}
-    for name, w in BASE_WEIGHTS.items():
+    for name, w in weights.items():
         if factors[name][0]:
             out[name] = w * 100.0 / active_sum
         else:
@@ -203,7 +216,14 @@ def _score_color_harmony(outfit: list[dict]) -> float:
 
 
 def _score_occasion(outfit: list[dict], occasion: str) -> float:
-    return sum(occ.occasion_suitability(occasion, _cat(e) or "") for e in outfit) / len(outfit)
+    """Phase 6 depth: category suitability (70%) plus how comfortably each
+    piece's pattern/fit sit within the occasion's formality (30%)."""
+    values = []
+    for entry in outfit:
+        base = occ.occasion_suitability(occasion, _cat(entry) or "")
+        form = occ.formality_piece(occasion, _pattern(entry), _fit(entry))
+        values.append(0.7 * base + 0.3 * form)
+    return sum(values) / len(values)
 
 
 def _score_appearance(outfit: list[dict], color_profile: dict | None) -> float:
@@ -240,7 +260,7 @@ def score_outfit(
 ) -> dict:
     """Score one candidate outfit; returns the full factor report + total."""
     factors = active_factors(color_profile, weather)
-    weights = effective_weights(factors)
+    weights = effective_weights(factors, context_weights(weather))
     subscores = {
         "body_fit": _score_body_fit(outfit, style_profile),
         "proportion": _score_proportion(outfit, body_profile),

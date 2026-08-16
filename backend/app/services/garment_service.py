@@ -174,7 +174,11 @@ def _vision_features(img_bgr: np.ndarray) -> np.ndarray:
     rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
     h, w = rgb.shape[:2]
     scale = 224.0 / min(h, w)
-    rgb = cv2.resize(rgb, (max(1, int(w * scale)), max(1, int(h * scale))))
+    # round + 224 floor: float truncation could leave a side at 223 and the
+    # center-crop at 1px, which the ONNX graph rejects.
+    rgb = cv2.resize(
+        rgb, (max(224, int(round(w * scale))), max(224, int(round(h * scale))))
+    )
     y0, x0 = (rgb.shape[0] - 224) // 2, (rgb.shape[1] - 224) // 2
     crop = rgb[y0 : y0 + 224, x0 : x0 + 224].astype(np.float32) / 255.0
     pixel_values = ((crop - CLIP_MEAN) / CLIP_STD).transpose(2, 0, 1)[None]

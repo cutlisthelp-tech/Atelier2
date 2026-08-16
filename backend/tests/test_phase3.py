@@ -174,10 +174,15 @@ def test_inactive_factors_and_redistribution(client, profiles):
         assert f["active"] is False
         assert f["inactive_reason"] == reason
         assert f["effective_weight"] == 0.0
-    active_base = sum(f["base_weight"] for f in factors if f["active"])
+    # Phase 6: effective weights follow the context-scaled weights (weather
+    # base weight × (1 + severity)), renormalized over active factors.
+    weights = ranking_service.context_weights(resp["context"]["weather"])
+    active_sum = sum(
+        w for name, w in weights.items() if _factor(factors, name)["active"]
+    )
     for f in factors:
         if f["active"]:
-            expected = f["base_weight"] * 100.0 / active_base
+            expected = weights[f["name"]] * 100.0 / active_sum
             assert abs(f["effective_weight"] - round(expected, 1)) <= 0.1
 
 

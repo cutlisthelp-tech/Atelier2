@@ -277,6 +277,44 @@ Honest limits of this verification:
 - Outfit Detail's `[Check Sizes]` button wires to this engine when that
   screen lands; today the flow lives under PROFILE → Size check.
 
-## Phases 6–10
+## Phase 6 — Weather + Occasion depth
+
+**Status: VERIFIED — 2026-08-16**
+
+Definition of Done: *ranking measurably shifts when occasion/weather inputs
+change (§3 test, applied to context).*
+
+Evidence:
+
+- Two new real CC fixtures (provenance recorded): `garment_tshirt.jpg`
+  (File:T-shirt mockup.jpg, CC BY-SA 4.0) and `garment_shorts.jpg`
+  (File:Men's Shorts - Old Bull Lee - Orange.jpg, CC BY-SA 3.0), classified
+  by the real Phase 2 pipeline as `t-shirt` 0.949 and `shorts` 0.999 — the
+  wardrobe now assembles four real outfits, so context can decide.
+- `pytest` — 55/55 passed. Six new Phase 6 tests against a local Open-Meteo
+  contract stub: HOT (35°C) ranks the summer pair first, COLD (5°C) the warm
+  pair first — a measurable weather-driven flip with the Weather factor as
+  the visible driver; severity (cold/rainy) raises the Weather effective
+  weight above mild while base stays 6.0 and active weights still sum to
+  100; dinner vs gym reorders the same wardrobe via the occasion table;
+  every why-line traces a factor that cleared the 4.0 contribution
+  threshold; double-call identical.
+- Depth mechanics are documented deterministic configuration: occasion
+  score = 0.7·category suitability + 0.3·formality fit (per-occasion
+  formality × pattern/fit penalties); weather base weight ×(1 + severity).
+- Maintenance fix landed with this pass: the fashionCLIP preprocessor could
+  truncate a resized side to 223px and feed a 1px crop to ONNX (crash on
+  square-ish large photos); now rounded with a 224 floor.
+- `flutter analyze` — no issues; `flutter test` — 32/32 (app renders the
+  richer factor report generically; no UI change needed).
+
+Honest limits of this verification:
+
+- Weather in the flip tests is a local stub of the Open-Meteo contract; the
+  live-weather success path remains covered by Phase 3 tests.
+- Formality/severity values are documented styling conventions, not learned
+  — same status as the occasion tables (PRODUCT_SPEC §6 tunable baseline).
+
+## Phases 7–10
 
 Not started. No feature flags are enabled.
