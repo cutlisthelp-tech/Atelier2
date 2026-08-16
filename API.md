@@ -328,6 +328,52 @@ Honesty contract:
   e.g. chest/waist-only charts, or footwear, which needs a foot length the
   scan does not measure). Plain `422` for taxonomy/fit/range validation.
 
+## `POST /search/similar` — Phase 8
+
+Multipart form: `file` (the query screenshot/photo) + `candidates` (JSON
+string: the client's real wardrobe embeddings — `[{ "id", "embedding[512]" }]`).
+The query image stays in request memory.
+
+Success `200`:
+
+```json
+{
+  "state": "ok",
+  "matches": [
+    { "id": "garment_checkered.jpg", "similarity": 1.0, "tier": "exact_match" },
+    { "id": "garment_tshirt.jpg", "similarity": 0.74, "tier": "inspired" }
+  ],
+  "index": "stateless",
+  "method": "fashionclip_cosine",
+  "tiers": { "exact_match": 0.92, "close_match": 0.80, "inspired": 0.68 },
+  "catalog": {
+    "same_product_other_merchant": "CATALOG_NOT_CONNECTED",
+    "budget_alternative": "CATALOG_NOT_CONNECTED",
+    "note": "No merchant catalog is connected — merchant tiers stay unavailable."
+  },
+  "message": ""
+}
+```
+
+Honesty contract (PRODUCT_SPEC §9):
+
+- The query is embedded by the real Marqo-fashionCLIP vision encoder; matches
+  are nearest neighbors by cosine similarity against a **real indexed
+  collection** (the photographed wardrobe). Tiers are the documented
+  similarity bands above; nothing below the 0.68 floor is returned.
+- Nothing clears the floor → `"state": "NO_MATCH_FOUND"` with empty matches
+  and a plain message — never a fabricated closest guess.
+- §9's merchant tiers (Same Product Different Merchant, Budget Alternative)
+  require a catalog; none is connected (rule 4), so they are reported
+  `CATALOG_NOT_CONNECTED` verbatim.
+- `index` says which adapter served the query: `pgvector` when `DATABASE_URL`
+  is configured (schema: `backend/migrations/001_pgvector.sql`), otherwise
+  `stateless` — exact cosine, the same mathematics, no approximation.
+
+Failures `422`: `POOR_IMAGE` (unreadable query), `INSUFFICIENT_DATA` (empty
+index). Plain `422` for malformed candidate payloads. `503` for genuine
+service faults (e.g. `DATABASE_URL` set but the driver is missing).
+
 ## Error envelope
 
 Domain errors always use the `docs/PRODUCT_SPEC.md §12` taxonomy:

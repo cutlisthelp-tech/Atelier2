@@ -351,6 +351,48 @@ Honest limits of this verification:
 - Wardrobe photos themselves are still never stored (BUILD_PLAN §5); only
   analysis JSON persists, session-only on web.
 
-## Phases 8–10
+## Phase 8 — Product Search / Find This Look
+
+**Status: VERIFIED — 2026-08-16**
+
+Definition of Done: *a screenshot returns real tiered matches, or "no match
+found".*
+
+Evidence:
+
+- `POST /search/similar`: query photo → real Marqo-fashionCLIP embedding →
+  tiered nearest neighbors (exact ≥0.92 / close ≥0.80 / inspired ≥0.68)
+  against the real wardrobe index; below the floor → `NO_MATCH_FOUND` with
+  empty matches, never a fabricated closest guess. Merchant tiers (§9)
+  reported `CATALOG_NOT_CONNECTED` verbatim (rule 4).
+- Vector index per BUILD_PLAN §6: `PgVectorIndex` adapter + schema
+  (`backend/migrations/001_pgvector.sql`, cosine `<=>`, ivfflat) activates
+  with `DATABASE_URL`; `StatelessCosineIndex` serves the identical exact
+  cosine where no Postgres exists (this codespace). The response names the
+  adapter that served it.
+- `pytest` — 69/69 passed. Nine new Phase 8 tests: self-query returns the
+  same garment first at similarity 1.0 / `exact_match`, matches sorted
+  desc, tier consistent with the documented bands; landscape query →
+  `NO_MATCH_FOUND`; garbage → `POOR_IMAGE`; empty index →
+  `INSUFFICIENT_DATA`; malformed candidates → plain 422; double-call
+  identical; pgvector adapter SQL verified against a driver double (nearest
+  maps `1 - (emb <=> q)`, seed upserts).
+- `flutter analyze` — no issues; `flutter test` — 39/39: client parses the
+  tiered envelope, NO_MATCH stays a real result, §12 codes surface, and the
+  WARDROBE tab shows the Find-this-look panel.
+- Web preview E2E: wardrobe seeded by real uploads, then a fixture query
+  returns the visible tiered match list; a landscape query shows "no match
+  found".
+
+Honest limits of this verification:
+
+- No Postgres instance exists in this environment (server install needs
+  sudo), so the pgvector path is verified at the adapter/SQL level only;
+  live pgvector verification lands when an instance is provisioned.
+- Salient-object segmentation for cluttered flat-lays remains deferred
+  (not in Phase 8's BUILD_PLAN scope).
+- Merchant search tiers stay unconnected until a licensed catalog exists.
+
+## Phases 9–10
 
 Not started. No feature flags are enabled.

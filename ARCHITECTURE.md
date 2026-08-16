@@ -20,8 +20,9 @@ confidence value, or is one of the failure states in `docs/PRODUCT_SPEC.md §12`
 - **Style Profile** — real user input (height, fit, aesthetics, bans, budget) persisted locally as JSON (`path_provider`); Phase 9 migrates to remote sync.
 - **Model Manager** — app side: Discover + Report from the canonical registry. Backend side (`backend/app/models/manager.py`): the full Download → Verify (SHA-256) → Install → Load → Report lifecycle over `backend/.model_cache/`.
 - **Model registry** (`models/registry.yaml`) — canonical; six verified entries (pose, face, selfie_multiclass, fashionCLIP vision/text/tokenizer).
-- **FastAPI** — health, feature flags, `/analysis/body`, `/analysis/appearance`, `/analysis/garment`, `/models`, `/recommend/outfit`.
-- **No database.** Postgres/pgvector enters only when a phase requires it (visual search, accounts). The 512-dim garment embedding is returned to the client and stored by nothing yet.
+- **FastAPI** — health, feature flags, `/analysis/body`, `/analysis/appearance`, `/analysis/garment`, `/models`, `/recommend/outfit`, `/tryon/render`, `/size/recommend`, `/search/similar`.
+- **Vector index (Phase 8)** — `backend/app/services/vector_index.py` behind one contract: `PgVectorIndex` (schema in `backend/migrations/001_pgvector.sql`, cosine `<=>`) activates only when `DATABASE_URL` is set (BUILD_PLAN §6); otherwise `StatelessCosineIndex` runs the same exact cosine over the embeddings the client carries. No Postgres instance is provisioned in the dev codespace; the stateless path is what tests and the preview verify.
+- **Wardrobe as the personal index.** The 512-dim fashionCLIP embedding is persisted with each wardrobe item (analysis JSON) and powers Find-This-Look; merchant catalogs remain unconnected and are said to be.
 
 ## Phase 1 decision: inference on backend CPU
 

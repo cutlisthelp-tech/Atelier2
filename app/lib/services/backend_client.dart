@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/analysis.dart';
 import '../models/recommendation.dart';
+import '../models/search.dart';
 import '../models/size.dart';
 import '../models/tryon.dart';
 
@@ -186,6 +187,61 @@ class BackendClient {
       return const SizeFailure(
         code: 'NETWORK_ERROR',
         message: 'Could not reach the size engine. Check the connection and try again.',
+      );
+    }
+  }
+
+  /// Phase 8: query photo + the wardrobe's real embeddings → tiered matches
+  /// or NO_MATCH_FOUND. The index lives where the real data lives.
+  Future<SearchOutcome> searchSimilar(
+    Uint8List query,
+    List<Map<String, dynamic>> candidates,
+  ) async {
+    if (!isConfigured) {
+      return const SearchFailure(
+        code: 'NETWORK_ERROR',
+        message: 'No backend is configured. Set BACKEND_URL when building the app.',
+      );
+    }
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/search/similar'),
+    )
+      ..files.add(
+        http.MultipartFile.fromBytes('file', query, filename: 'query.jpg'),
+      )
+      ..fields['candidates'] = json.encode(candidates);
+    try {
+      final streamed = await _http
+          .send(request)
+          .timeout(const Duration(seconds: 30));
+      final resp = await http.Response.fromStream(streamed);
+      final decoded = json.decode(resp.body);
+      if (resp.statusCode == 200) {
+        return SearchOk(
+          SimilarSearchResult.fromJson(decoded as Map<String, dynamic>),
+        );
+      }
+      final error = (decoded as Map<String, dynamic>)['error'];
+      if (error is Map<String, dynamic>) {
+        return SearchFailure(
+          code: error['code'] as String,
+          message: error['message'] as String,
+        );
+      }
+      return SearchFailure(
+        code: 'NETWORK_ERROR',
+        message: 'The backend rejected the request (${resp.statusCode}).',
+      );
+    } on FormatException {
+      return const SearchFailure(
+        code: 'NETWORK_ERROR',
+        message: 'The backend returned an unreadable response.',
+      );
+    } catch (_) {
+      return const SearchFailure(
+        code: 'NETWORK_ERROR',
+        message: 'Could not reach the search service. Check the connection and try again.',
       );
     }
   }

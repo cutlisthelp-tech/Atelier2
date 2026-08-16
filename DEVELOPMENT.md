@@ -45,6 +45,11 @@ Backend env: `FASHN_API_KEY` enables the hosted try-on renderer (Phase 4);
 without it `/tryon/render` honestly returns `MODEL_MISSING`. `FASHN_BASE_URL`
 and `WEATHER_BASE_URL` override providers for tests.
 
+Phase 8 vector index: set `DATABASE_URL` to a Postgres with pgvector and
+apply `backend/migrations/001_pgvector.sql` (needs `pip install
+'psycopg[binary]'`); `/search/similar` then reports `"index": "pgvector"`.
+Without it the stateless exact-cosine path serves the same contract.
+
 ## Rules that bite if ignored
 
 - Never commit `.env`, keys, raw user images, or build artifacts (`.gitignore` covers them).

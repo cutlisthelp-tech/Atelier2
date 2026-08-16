@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../models/analysis.dart';
 import '../../models/recommendation.dart';
+import '../../models/search.dart';
 import '../../services/backend_client.dart';
 import '../../services/local_store.dart';
 import '../../theme/tokens.dart';
@@ -62,6 +63,8 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
   StyleProfile? _style;
   bool _fetching = false;
   RecommendOutcome? _outcome;
+  bool _searchBusy = false;
+  SearchOutcome? _searchOutcome;
 
   @override
   void initState() {
@@ -239,6 +242,55 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
       _fetching = false;
       _outcome = outcome;
     });
+  }
+
+  List<Map<String, dynamic>> get _indexCandidates => [
+        for (final item in _items ?? const <WardrobeItem>[])
+          if ((item.payload['garment'] as Map<String, dynamic>?)?['embedding']
+              != null)
+            {
+              'id': item.id,
+              'embedding':
+                  (item.payload['garment'] as Map<String, dynamic>)['embedding'],
+            },
+      ];
+
+  Future<void> _searchFrom(ImageSource source) async {
+    try {
+      final file = await _picker.pickImage(
+        source: source,
+        maxWidth: 1600,
+        imageQuality: 90,
+      );
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      setState(() {
+        _searchBusy = true;
+        _searchOutcome = null;
+      });
+      final outcome = await widget.backendClient.searchSimilar(
+        bytes,
+        _indexCandidates,
+      );
+      if (!mounted) return;
+      setState(() {
+        _searchBusy = false;
+        _searchOutcome = outcome;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _searchBusy = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            source == ImageSource.camera
+                ? 'No camera is available on this platform. Choose a file instead.'
+                : 'Files can\u2019t be opened on this platform.',
+            style: AppType.interface.copyWith(fontSize: 13),
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -439,6 +491,73 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
               else if (_outcome case RecommendFailure(:final code, :final message))
                 _failure(code, message),
             ],
+            const SizedBox(height: AppSpacing.unit * 3),
+            Text(
+              'Find this look',
+              style: AppType.display.copyWith(
+                fontSize: 20,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.unit),
+            Text(
+              'Show Atelier a screenshot or photo — it answers only from '
+              'your real wardrobe index. Merchant search stays unconnected.',
+              style: AppType.interface.copyWith(
+                fontSize: 13,
+                height: 1.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.unit * 2),
+            Wrap(
+              spacing: AppSpacing.unit,
+              runSpacing: AppSpacing.unit,
+              children: [
+                SizedBox(
+                  height: AppSpacing.minTapTarget,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: AppColors.borderSubtle),
+                      foregroundColor: AppColors.textPrimary,
+                    ),
+                    onPressed: () => _searchFrom(ImageSource.camera),
+                    child: Text(
+                      'Camera',
+                      style: AppType.interface.copyWith(fontSize: 14),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: AppSpacing.minTapTarget,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: AppColors.borderSubtle),
+                      foregroundColor: AppColors.textPrimary,
+                    ),
+                    onPressed: () => _searchFrom(ImageSource.gallery),
+                    child: Text(
+                      'Choose file',
+                      style: AppType.interface.copyWith(fontSize: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.unit * 2),
+            if (_searchBusy)
+              Text(
+                'Searching the index…',
+                style: AppType.data.copyWith(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            if (_searchOutcome case SearchOk(:final result))
+              _searchResults(result)
+            else if (_searchOutcome
+                case SearchFailure(:final code, :final message))
+              _failure(code, message),
           ],
         ],
       ),
@@ -493,6 +612,81 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  String _tierLabel(String tier) => switch (tier) {
+        'exact_match' => 'EXACT MATCH',
+        'close_match' => 'CLOSE MATCH',
+        _ => 'INSPIRED',
+      };
+
+  Widget _searchResults(SimilarSearchResult result) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (result.state == 'NO_MATCH_FOUND')
+          Text(
+            result.message,
+            style: AppType.interface.copyWith(
+              fontSize: 14,
+              height: 1.5,
+              color: AppColors.textSecondary,
+            ),
+          )
+        else
+          for (final match in result.matches) _matchRow(match),
+        const SizedBox(height: AppSpacing.unit),
+        Text(
+          result.catalogNote,
+          style: AppType.data.copyWith(
+            fontSize: 11,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Text(
+          '${result.method} · index ${result.index}',
+          style: AppType.data.copyWith(
+            fontSize: 11,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _matchRow(SimilarMatch match) {
+    final item = (_items ?? const <WardrobeItem>[])
+        .where((i) => i.id == match.id)
+        .toList();
+    final category = item.isEmpty
+        ? match.id
+        : ((item.first.payload['garment'] as Map<String, dynamic>?)?['category']
+                as Map<String, dynamic>?)?['value']
+            as String? ??
+            'Unidentified';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              category,
+              style: AppType.interface.copyWith(
+                fontSize: 14,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          Text(
+            '${_tierLabel(match.tier)} · ${(match.similarity * 100).round()}%',
+            style: AppType.data.copyWith(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
