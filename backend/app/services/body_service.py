@@ -72,6 +72,14 @@ def _landmarker():
         raise AtelierError(FailureState.MODEL_FAILED, f"Pose model could not be loaded: {exc}")
 
 
+def count_people(img) -> int:
+    """Detected people in a decoded, quality-gated frame (Phase 4 try-on)."""
+    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+    result = _landmarker().detect(mp_image)
+    return 0 if not result.pose_landmarks else len(result.pose_landmarks)
+
+
 def _dist(a, b) -> float:
     return math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2)
 

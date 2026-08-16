@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/analysis.dart';
 import '../models/recommendation.dart';
+import '../models/tryon.dart';
 
 class BackendClient {
   BackendClient({
@@ -63,6 +64,72 @@ class BackendClient {
       );
     }
     return outcome.toFailure();
+  }
+
+  /// Phase 4: person photo + garment photo → labeled render or §12 state.
+  /// The hosted provider polls internally, hence the generous timeout.
+  Future<TryOnOutcome> renderTryOn(Uint8List person, Uint8List garment) async {
+    if (!isConfigured) {
+      return const TryOnFailure(
+        code: 'NETWORK_ERROR',
+        message: 'No backend is configured. Set BACKEND_URL when building the app.',
+      );
+    }
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/tryon/render'),
+    )
+      ..files.add(
+        http.MultipartFile.fromBytes('person', person, filename: 'person.jpg'),
+      )
+      ..files.add(
+        http.MultipartFile.fromBytes('garment', garment, filename: 'garment.jpg'),
+      );
+    try {
+      final streamed = await _http
+          .send(request)
+          .timeout(const Duration(seconds: 90));
+      final resp = await http.Response.fromStream(streamed);
+      final decoded = json.decode(resp.body);
+      if (resp.statusCode == 200) {
+        final body = decoded as Map<String, dynamic>;
+        final render = body['render'] as Map<String, dynamic>;
+        return TryOnOk(
+          TryOnSuccess(
+            render: TryOnRender(
+              imageBytes: base64Decode(render['image'] as String),
+              method: render['method'] as String,
+              provider: render['provider'] as String,
+            ),
+            confidence: (body['confidence'] as num).toDouble(),
+            flags: (body['flags'] as List<dynamic>).cast<String>(),
+            category:
+                (body['garment'] as Map<String, dynamic>)['category'] as String,
+          ),
+        );
+      }
+      final error = (decoded as Map<String, dynamic>)['error'];
+      if (error is Map<String, dynamic>) {
+        return TryOnFailure(
+          code: error['code'] as String,
+          message: error['message'] as String,
+        );
+      }
+      return TryOnFailure(
+        code: 'NETWORK_ERROR',
+        message: 'The backend rejected the request (${resp.statusCode}).',
+      );
+    } on FormatException {
+      return const TryOnFailure(
+        code: 'NETWORK_ERROR',
+        message: 'The backend returned an unreadable response.',
+      );
+    } catch (_) {
+      return const TryOnFailure(
+        code: 'NETWORK_ERROR',
+        message: 'Could not reach the try-on service. Check the connection and try again.',
+      );
+    }
   }
 
   /// Phase 3: score outfits from the user's real wardrobe + profiles.

@@ -1,14 +1,18 @@
 # API
 
-Base: FastAPI app (`backend/app/main.py`). Version 0.0.0 (Phase 1 + 2 + 3).
+Base: FastAPI app (`backend/app/main.py`). Version 0.0.0 (Phase 1 + 2 + 3 + 4).
 
 ## `GET /health`
 
 Liveness with real values.
 
 ```json
-{ "status": "ok", "service": "atelier-backend", "version": "0.0.0", "uptime_seconds": 12.345 }
+{ "status": "ok", "service": "atelier-backend", "version": "0.0.0", "uptime_seconds": 12.345,
+  "vton": { "provider": "fashn", "configured": false } }
 ```
+
+`vton.configured` reports whether the hosted try-on key (`FASHN_API_KEY`) is
+present — the Diagnostics screen surfaces it honestly.
 
 ## `GET /config/feature-flags`
 
@@ -215,6 +219,42 @@ Failures: `422` envelope `INSUFFICIENT_DATA` when the wardrobe (after hard
 filters) cannot assemble any outfit — the message names what is actually
 missing (e.g. shoes). Plain `422` for request validation. `503` only for
 genuine service faults.
+
+## `POST /tryon/render` — Phase 4
+
+Multipart form: `person` and `garment` (JPEG/PNG, each ≤15 MB, never
+persisted or logged). Runs the real pipelines first — quality gate, pose
+(person count), garment analysis (category) — then the hosted FASHN
+`tryon-max` renderer, then computes confidence as the fashionCLIP cosine
+similarity between the source garment photo and the render.
+
+Success `200`:
+
+```json
+{
+  "render": {
+    "image": "<base64 jpeg>",
+    "mime": "image/jpeg",
+    "method": "image_based_vton",
+    "provider": "fashn"
+  },
+  "confidence": 0.931,
+  "flags": [],
+  "garment": { "category": "sweater", "category_confidence": 0.818 }
+}
+```
+
+Honesty contract (docs/PRODUCT_SPEC.md §7): `method` is always
+`image_based_vton` on this path — the API never claims precise physical
+simulation. `confidence` is a real computed similarity in [0, 1]; below 0.25
+the render is still returned but `flags` carries `LOW_CONFIDENCE`. The
+client shows method + confidence permanently (DESIGN_SYSTEM §5).
+
+Failures `422` (input-derived): `POOR_IMAGE`, `NO_PERSON`,
+`MULTIPLE_PEOPLE`, `INSUFFICIENT_DATA` (garment not identifiable),
+`VTON_UNSUPPORTED_GARMENT` (accessories: bag/hat/scarf/belt). Failures
+`503` (service-side): `MODEL_MISSING` (no `FASHN_API_KEY`, or the provider
+rejected it), `RATE_LIMITED`, `MODEL_FAILED`, `NETWORK_ERROR`.
 
 ## Error envelope
 

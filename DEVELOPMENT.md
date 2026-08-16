@@ -41,6 +41,10 @@ flutter build apk --debug
 Feature flags (all default false): `--dart-define=FEATURE_AUTH=true` etc.
 Backend URL for Diagnostics: `--dart-define=BACKEND_URL=http://<host>:8000`
 
+Backend env: `FASHN_API_KEY` enables the hosted try-on renderer (Phase 4);
+without it `/tryon/render` honestly returns `MODEL_MISSING`. `FASHN_BASE_URL`
+and `WEATHER_BASE_URL` override providers for tests.
+
 ## Rules that bite if ignored
 
 - Never commit `.env`, keys, raw user images, or build artifacts (`.gitignore` covers them).

@@ -182,6 +182,15 @@ def _vision_features(img_bgr: np.ndarray) -> np.ndarray:
     return out / np.linalg.norm(out, axis=1, keepdims=True)
 
 
+def image_embedding(img_bgr) -> np.ndarray:
+    """Unit 512-d fashionCLIP vision vector for one frame.
+
+    Phase 4 reuses it to compute try-on confidence as the real cosine
+    similarity between the source garment and the provider's render.
+    """
+    return _vision_features(img_bgr)[0]
+
+
 def _zero_shot(img_feats: np.ndarray, prompts: list[str], cache_key: str) -> np.ndarray:
     text_feats = _text_features(prompts, cache_key)
     logits = TEMPERATURE * (img_feats @ text_feats.T)[0]

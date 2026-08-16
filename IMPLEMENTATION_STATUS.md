@@ -186,6 +186,49 @@ Maintenance fixes landed with this pass (no phase scope changed):
   transitive GUI build, and mediapipe's native `libEGL` requirement
   (TROUBLESHOOTING.md).
 
-## Phases 4–10
+## Phase 4 — Virtual Try-On
+
+**Status: VERIFIED — 2026-08-16**
+
+Definition of Done: *Try-on renders with method + confidence shown, or an
+explicit failure state.*
+
+Evidence:
+
+- FASHN `tryon-max` contract verified per AGENTS.md rule 3 (docs.fashn.ai,
+  2026-08-16): `/v1/run` + `/v1/status/{id}` polling, Bearer auth, error
+  codes, paid-credits terms. The hosted path is the §7-sanctioned MVP choice
+  on CPU-only infrastructure; the adapter sits behind a swappable provider
+  boundary.
+- `pytest` — 40/40 passed. Eleven new Phase 4 tests on **real fixture
+  photos**: landscape person → `NO_PERSON`, garbage → `POOR_IMAGE`, hanger
+  garment → `INSUFFICIENT_DATA`, accessories → `VTON_UNSUPPORTED_GARMENT`,
+  no key → `MODEL_MISSING`. Against a local protocol stub of the FASHN API:
+  a render returns `method: image_based_vton` + provider with a **computed**
+  fashionCLIP confidence (>0.9 when the stub returns the source garment;
+  flagged `LOW_CONFIDENCE` when it returns an unrelated image), identical
+  across repeated calls; 429 → `RATE_LIMITED`, 401 → `MODEL_MISSING`.
+- Live `uvicorn` + web-preview E2E in a browser: real person + real garment
+  photos through `POST /tryon/render` → honest `MODEL_MISSING` stated
+  plainly (no key configured). Nothing rendered, nothing substituted.
+- `flutter analyze` — no issues. `flutter test` — 26/26 passed: the TRY ON
+  tab is a real flow (choose photo + choose garment; render disabled until
+  both exist), the result view shows method + confidence permanently and
+  flags LOW_CONFIDENCE plainly, the client parses labeled envelopes and §12
+  codes, and HOME's `TRY ON` now opens the TRY ON tab.
+
+Honest limits of this verification:
+
+- **No provider key exists**, so a real hosted render was not produced in
+  this environment. The DoD is met on its explicit-failure branch; the
+  render+confidence branch is verified against a protocol stub with real
+  images. The first real render happens when `FASHN_API_KEY` is provisioned
+  (paid credits) — the adapter is contract-verified and ready.
+- Confidence is garment-fidelity similarity (fashionCLIP cosine between the
+  source garment and the render), always shown next to the method string
+  (DESIGN_SYSTEM §5). It is never a claim of precise physical simulation
+  (PRODUCT_SPEC §7).
+
+## Phases 5–10
 
 Not started. No feature flags are enabled.

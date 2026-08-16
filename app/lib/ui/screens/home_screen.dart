@@ -276,7 +276,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: AppSpacing.unit * 2),
               if (_outcome case RecommendSuccess(:final recommendation))
-                ResultCard(recommendation: recommendation)
+                ResultCard(
+                  recommendation: recommendation,
+                  onTryOn: () => widget.onOpenTab?.call(2),
+                )
               else if (_outcome case RecommendFailure(
                 :final code,
                 :final message,
@@ -401,9 +404,12 @@ class _HomeScreenState extends State<HomeScreen> {
 /// Glass is reserved for primary surfaces (DESIGN_SYSTEM §1) — the Best
 /// Outfit card is one of them.
 class ResultCard extends StatelessWidget {
-  const ResultCard({super.key, required this.recommendation});
+  const ResultCard({super.key, required this.recommendation, this.onTryOn});
 
   final OutfitRecommendation recommendation;
+
+  /// Opens the TRY ON tab with this outfit; null on developer previews.
+  final VoidCallback? onTryOn;
 
   String get _contextLine {
     final w = recommendation.weather;
@@ -572,8 +578,11 @@ class ResultCard extends StatelessWidget {
               Expanded(
                 child: _actionButton(
                   'TRY ON',
-                  () =>
-                      _showNote(context, 'Try-on arrives next \u2014 Phase 4.'),
+                  onTryOn ??
+                      () => _showNote(
+                            context,
+                            'Open the TRY ON tab to try this on.',
+                          ),
                 ),
               ),
               const SizedBox(width: AppSpacing.unit),

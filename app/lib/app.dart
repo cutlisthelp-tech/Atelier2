@@ -74,7 +74,7 @@ class _AtelierAppState extends State<AtelierApp> {
               onOpenTab: (i) => setState(() => _tab = i),
             ),
             const DiscoverScreen(),
-            const TryOnScreen(),
+            TryOnScreen(backendClient: _backendClient),
             WardrobeScreen(
               backendClient: _backendClient,
               wardrobeStore: _wardrobeStore,

@@ -27,6 +27,19 @@ The app's place picker ships a small bundled list of reference city
 coordinates (Casablanca, Rabat, Paris, London, New York, Dubai) plus manual
 lat/lon entry — an explicit user choice, not geocoding.
 
+## FASHN — hosted virtual try-on (Phase 4)
+
+| | |
+|---|---|
+| Provider | FASHN (fashn.ai), hosted `tryon-max` model |
+| Endpoint | `POST https://api.fashn.ai/v1/run` then poll `GET /v1/status/{id}` (contract verified 2026-08-16 against docs.fashn.ai) |
+| Auth | `Authorization: Bearer` key from `FASHN_API_KEY`; paid credits, no free tier |
+| License/terms | Proprietary hosted API — the integration path sanctioned by `docs/PRODUCT_SPEC.md` §7 for MVP (no self-hosted GPU diffusion on CPU-only infrastructure) |
+| Consumer | `POST /tryon/render` — renders the person photo wearing the garment photo |
+| Honesty | Result is always labeled `method: image_based_vton` + provider; confidence is **computed**, not claimed: fashionCLIP cosine similarity between the source garment photo and the render (below 0.25 the render is shown but flagged `LOW_CONFIDENCE`) |
+| Failure mode | No key → `MODEL_MISSING` (nothing rendered, no substitute). 401 → `MODEL_MISSING`, 429 → `RATE_LIMITED`, 400/`ImageLoadError` → `POOR_IMAGE`, 5xx/`failed` → `MODEL_FAILED`, unreachable → `NETWORK_ERROR` |
+| Test override | `FASHN_BASE_URL` env var points the adapter at any base URL (tests run a local protocol stub; every number in the response is still computed from real fixture images) |
+
 ## Test fixtures (Phase 1 + 2 + 3) — real photos, real provenance
 
 The backend test suite (`backend/tests/fixtures/`) runs on real, openly

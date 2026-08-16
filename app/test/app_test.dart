@@ -27,7 +27,10 @@ void main() {
 
     await tester.tap(find.text('TRY ON'));
     await tester.pumpAndSettle();
-    expect(find.text('Try On isn\'t connected yet.'), findsOneWidget);
+    // Phase 4: the tab is a real flow — choose a photo and a garment.
+    expect(find.text('Try On'), findsOneWidget);
+    expect(find.text('PHOTO OF YOU'), findsOneWidget);
+    expect(find.text('GARMENT'), findsOneWidget);
 
     await tester.tap(find.text('WARDROBE'));
     await tester.pumpAndSettle();
