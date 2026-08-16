@@ -18,6 +18,9 @@
 ```bash
 cd backend
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+# mediapipe pulls opencv-contrib-python (GUI build, needs libGL) which shadows
+# the headless build the backend requires — restore it:
+.venv/bin/pip install --force-reinstall --no-deps opencv-python-headless
 .venv/bin/pytest                      # tests
 .venv/bin/uvicorn app.main:app --reload
 ```

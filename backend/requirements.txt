@@ -7,6 +7,11 @@ PyYAML>=6,<7
 # Phase 1 inference stack — verified 2026-08-14 (license, activity, CPU fit).
 mediapipe==1.0.1
 # Headless build: the backend never opens a window and needs no libGL/X11.
+# NOTE: mediapipe transitively installs opencv-contrib-python (GUI build),
+# whose cv2 files shadow this one and demand libGL. After installing these
+# requirements, restore the headless build:
+#   pip install --force-reinstall --no-deps opencv-python-headless
+# (see DEVELOPMENT.md / TROUBLESHOOTING.md)
 opencv-python-headless>=4.10,<6
 # Phase 2 garment stack — Marqo-fashionCLIP ONNX (Apache-2.0), no PyTorch.
 onnxruntime==1.28.0

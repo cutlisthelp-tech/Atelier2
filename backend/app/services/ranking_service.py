@@ -321,6 +321,10 @@ def explain(
     return lines
 
 
+def _factor_score(result: dict, name: str) -> float:
+    return next(f for f in result["factors"] if f["name"] == name)["score"]
+
+
 def _distinctiveness(entry: dict) -> float:
     pattern = _pattern(entry)
     distinct = 0.0
@@ -340,7 +344,11 @@ def select_alternatives(
     """§6 alternatives #1-#4. Never pads: returns only distinct outfits that exist."""
     by_score = sorted(
         candidates,
-        key=lambda c: (-scored[c["key"]]["score"], -scored[c["key"]]["factors"][4]["score"], c["key"]),
+        key=lambda c: (
+            -scored[c["key"]]["score"],
+            -_factor_score(scored[c["key"]], "occasion"),
+            c["key"],
+        ),
     )
     picked: list[dict] = []
     if not by_score:
@@ -352,7 +360,11 @@ def select_alternatives(
         safer = max(
             remaining,
             key=lambda c: (
-                (scored[c["key"]]["factors"][4]["score"] + scored[c["key"]]["factors"][0]["score"]) / 2,
+                (
+                    _factor_score(scored[c["key"]], "occasion")
+                    + _factor_score(scored[c["key"]], "body_fit")
+                )
+                / 2,
                 scored[c["key"]]["score"],
             ),
         )

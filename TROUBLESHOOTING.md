@@ -16,8 +16,8 @@ running the app against a live backend.
 
 ## Diagnostics shows "No models registered."
 
-Expected in Phase 0 — `models/registry.yaml` is intentionally empty. See
-`MODEL_SETUP.md`.
+The bundled `models/registry.yaml` asset is missing or empty on this checkout.
+See `MODEL_SETUP.md`.
 
 ## Registry parse error: missing required fields
 
@@ -29,3 +29,20 @@ rejected by design.
 ## Backend tests can't import `app`
 
 Run pytest from `backend/` (its `pytest.ini` sets `pythonpath = .`).
+
+## `ImportError: libGL.so.1` when importing cv2
+
+`mediapipe` transitively installs `opencv-contrib-python` (GUI build), whose
+`cv2` files shadow the headless build this backend requires. Restore it:
+
+```bash
+.venv/bin/pip install --force-reinstall --no-deps opencv-python-headless
+```
+
+## `OSError: libEGL.so.1` when mediapipe loads its native library
+
+`libmediapipe.so` links against EGL/GLES. Install them system-wide
+(`sudo apt-get install -y libegl1 libgl1 libgles2`), or, where sudo is
+unavailable, extract the `libegl1` / `libegl-mesa0` / `libgles2` debs into a
+local directory and point `LD_LIBRARY_PATH` at it when running pytest or
+uvicorn.

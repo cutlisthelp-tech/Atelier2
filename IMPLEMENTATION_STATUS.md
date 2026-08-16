@@ -164,6 +164,28 @@ Honest limits of this verification:
   is verified end-to-end from real photos through the same endpoints the app
   calls.
 
+## Environment rebuild re-verification — 2026-08-16
+
+The codespace was rebuilt and the toolchain lost; Phases 0–3 were
+re-verified from scratch on the fresh environment: backend `pytest` 29/29
+on real fixture photos with live Open-Meteo weather, `flutter analyze`
+clean, `flutter test` 21/21, and the web preview re-inspected in a browser.
+
+Maintenance fixes landed with this pass (no phase scope changed):
+
+- Style Profile now offers all four fit values, in sync with the backend
+  `FIT_SCALE` (`oversized` was missing from the app).
+- 44pt minimum tap target enforced on chips and the fit segmented control
+  (DESIGN_SYSTEM §2).
+- Honest storage-unavailable states on Style Profile and the body-scan
+  entry, matching the existing HOME/WARDROBE pattern (previously an
+  unhandled `MissingPluginException` and an infinite "Loading…" on web).
+- Ranking engine looks up factor reports by name instead of positional
+  indices.
+- Environment fixes documented: opencv-headless shadowed by mediapipe's
+  transitive GUI build, and mediapipe's native `libEGL` requirement
+  (TROUBLESHOOTING.md).
+
 ## Phases 4–10
 
 Not started. No feature flags are enabled.

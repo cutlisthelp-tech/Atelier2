@@ -1,5 +1,19 @@
+Resolving dependencies...
+Downloading packages...
+  camera 0.11.4 (0.12.0+2 available)
+  camera_android_camerax 0.6.30 (0.7.4+5 available)
+  camera_avfoundation 0.9.23+2 (0.10.2 available)
+  hooks 2.0.2 (2.1.0 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.3 (1.19.0 available)
+  record_use 0.6.0 (1.1.0 available)
+  test_api 0.7.12 (0.7.13 available)
+  vector_math 2.4.0 (2.4.2 available)
+Got dependencies!
+9 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
 Launching lib/main.dart on Web Server in debug mode...
-Waiting for connection from debug service on Web Server...         25.6s
+Waiting for connection from debug service on Web Server...         25.8s
 lib/main.dart is being served at http://0.0.0.0:8080
 The web-server device requires the Dart Debug Chrome extension for debugging. Consider using the Chrome or Edge devices for an improved development workflow.
 
@@ -11,6 +25,6 @@ d Detach (terminate "flutter run" but leave application running).
 c Clear the screen
 q Quit (terminate the application on the device).
 
-Debug service listening on ws://127.0.0.1:41443/5vf_5Zk8Mk4=/ws
-A Dart VM Service on Web Server is available at: http://127.0.0.1:41443/5vf_5Zk8Mk4=
-The Flutter DevTools debugger and profiler on Web Server is available at: http://127.0.0.1:41443/5vf_5Zk8Mk4=/devtools/?uri=ws://127.0.0.1:41443/5vf_5Zk8Mk4=/ws
+Debug service listening on ws://127.0.0.1:40421/jJsG_Pp6urs=/ws
+A Dart VM Service on Web Server is available at: http://127.0.0.1:40421/jJsG_Pp6urs=
+The Flutter DevTools debugger and profiler on Web Server is available at: http://127.0.0.1:40421/jJsG_Pp6urs=/devtools/?uri=ws://127.0.0.1:40421/jJsG_Pp6urs=/ws

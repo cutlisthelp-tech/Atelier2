@@ -30,8 +30,22 @@ class ProfileScreen extends StatelessWidget {
   final ScanRecordStore? appearanceStore;
 
   Future<void> _startBodyScan(BuildContext context) async {
-    final profile = await styleStore.load();
-    final height = profile?.heightCm;
+    double? height;
+    try {
+      height = (await styleStore.load())?.heightCm;
+    } catch (_) {
+      // e.g. the web preview has no local file storage — say so, don't crash.
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Local storage is unavailable on this platform.',
+            style: AppType.interface.copyWith(fontSize: 13),
+          ),
+        ),
+      );
+      return;
+    }
     if (!context.mounted) return;
     if (height == null) {
       // A body scan without the user's real height would produce
@@ -45,12 +59,13 @@ class ProfileScreen extends StatelessWidget {
       );
       return;
     }
+    final resolvedHeight = height;
     await startScanFlow(
       context,
       consentStore: consentStore,
       scanScreen: (_) => BodyScanScreen(
         client: backendClient,
-        heightCm: height,
+        heightCm: resolvedHeight,
         bodyStore: bodyStore,
         appearanceStore: appearanceStore,
       ),

@@ -242,6 +242,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             : AppColors.textSecondary,
                       ),
                     ),
+                    // 44pt minimum tap target (DESIGN_SYSTEM §2).
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     selected: o == _occasion,
                     selectedColor: AppColors.textPrimary,
                     backgroundColor: AppColors.surfaceElevated,
@@ -354,13 +356,16 @@ class _HomeScreenState extends State<HomeScreen> {
             style: AppType.interface.copyWith(color: AppColors.textPrimary),
           ),
         ),
-        TextButton(
-          onPressed: _pickPlace,
-          child: Text(
-            'Change',
-            style: AppType.interface.copyWith(
-              fontSize: 13,
-              color: AppColors.textSecondary,
+        SizedBox(
+          height: AppSpacing.minTapTarget,
+          child: TextButton(
+            onPressed: _pickPlace,
+            child: Text(
+              'Change',
+              style: AppType.interface.copyWith(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
         ),

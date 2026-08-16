@@ -10,7 +10,9 @@ class StyleProfileScreen extends StatefulWidget {
 
   final StyleProfileStore store;
 
-  static const fitOptions = ['slim', 'regular', 'relaxed'];
+  /// Must stay in sync with the backend FIT_SCALE — the ranking engine and
+  /// the Phase 2 garment pipeline both handle all four fit values.
+  static const fitOptions = ['slim', 'regular', 'relaxed', 'oversized'];
   static const aestheticOptions = [
     'minimal',
     'classic',
@@ -32,6 +34,7 @@ class _StyleProfileScreenState extends State<StyleProfileScreen> {
   String _fit = 'regular';
   final Set<String> _aesthetics = {};
   bool _loaded = false;
+  bool _storageUnavailable = false;
   String? _savedNote;
 
   @override
@@ -41,7 +44,19 @@ class _StyleProfileScreenState extends State<StyleProfileScreen> {
   }
 
   Future<void> _load() async {
-    final profile = await widget.store.load();
+    StyleProfile? profile;
+    try {
+      profile = await widget.store.load();
+    } catch (_) {
+      // e.g. the web preview has no local file storage — say so, don't hang.
+      if (mounted) {
+        setState(() {
+          _storageUnavailable = true;
+          _loaded = true;
+        });
+      }
+      return;
+    }
     if (!mounted) return;
     setState(() {
       if (profile != null) {
@@ -75,16 +90,24 @@ class _StyleProfileScreenState extends State<StyleProfileScreen> {
       setState(() => _savedNote = 'Budget must be a positive number.');
       return;
     }
-    await widget.store.save(
-      StyleProfile(
-        heightCm: height,
-        fitPreference: _fit,
-        aesthetics: _aesthetics.toList()..sort(),
-        bannedColors: _split(_bannedColors.text),
-        bannedBrands: _split(_bannedBrands.text),
-        budgetCeiling: budget,
-      ),
-    );
+    try {
+      await widget.store.save(
+        StyleProfile(
+          heightCm: height,
+          fitPreference: _fit,
+          aesthetics: _aesthetics.toList()..sort(),
+          bannedColors: _split(_bannedColors.text),
+          bannedBrands: _split(_bannedBrands.text),
+          budgetCeiling: budget,
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(() =>
+            _savedNote = 'Local storage is unavailable on this platform.');
+      }
+      return;
+    }
     if (mounted) setState(() => _savedNote = 'Saved — on this device only.');
   }
 
@@ -104,6 +127,23 @@ class _StyleProfileScreenState extends State<StyleProfileScreen> {
       body: SafeArea(
         child: !_loaded
             ? const Center(child: Text('Loading…', style: AppType.interface))
+            : _storageUnavailable
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.unit * 3),
+                  child: Text(
+                    'Local storage is unavailable here, so the style profile '
+                    'can\u2019t be saved. Run Atelier on Android for the full '
+                    'flow.',
+                    textAlign: TextAlign.center,
+                    style: AppType.interface.copyWith(
+                      fontSize: 15,
+                      height: 1.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              )
             : ListView(
                 padding: const EdgeInsets.all(AppSpacing.unit * 3),
                 children: [
@@ -117,10 +157,19 @@ class _StyleProfileScreenState extends State<StyleProfileScreen> {
                   const SizedBox(height: AppSpacing.unit * 2),
                   _label('FIT PREFERENCE'),
                   SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'slim', label: Text('Slim')),
-                      ButtonSegment(value: 'regular', label: Text('Regular')),
-                      ButtonSegment(value: 'relaxed', label: Text('Relaxed')),
+                    style: const ButtonStyle(
+                      minimumSize: WidgetStatePropertyAll(
+                        Size(0, AppSpacing.minTapTarget),
+                      ),
+                    ),
+                    segments: [
+                      for (final fit in StyleProfileScreen.fitOptions)
+                        ButtonSegment(
+                          value: fit,
+                          label: Text(
+                            fit[0].toUpperCase() + fit.substring(1),
+                          ),
+                        ),
                     ],
                     selected: {_fit},
                     onSelectionChanged: (s) => setState(() {
@@ -137,6 +186,8 @@ class _StyleProfileScreenState extends State<StyleProfileScreen> {
                       for (final a in StyleProfileScreen.aestheticOptions)
                         FilterChip(
                           label: Text(a),
+                          // 44pt minimum tap target (DESIGN_SYSTEM §2).
+                          padding: const EdgeInsets.symmetric(vertical: 6),
                           selected: _aesthetics.contains(a),
                           onSelected: (on) => setState(() {
                             on ? _aesthetics.add(a) : _aesthetics.remove(a);
