@@ -21,6 +21,7 @@ class ProfileScreen extends StatelessWidget {
     required this.backendClient,
     this.bodyStore,
     this.appearanceStore,
+    this.sessionStorage = false,
   });
 
   final ModelManager modelManager;
@@ -29,6 +30,7 @@ class ProfileScreen extends StatelessWidget {
   final BackendClient backendClient;
   final ScanRecordStore? bodyStore;
   final ScanRecordStore? appearanceStore;
+  final bool sessionStorage;
 
   Future<void> _startBodyScan(BuildContext context) async {
     double? height;
@@ -105,7 +107,12 @@ class ProfileScreen extends StatelessWidget {
             title: 'Style profile',
             subtitle: 'Height, fit, aesthetics, bans, budget',
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => StyleProfileScreen(store: styleStore)),
+              MaterialPageRoute(
+                builder: (_) => StyleProfileScreen(
+                  store: styleStore,
+                  sessionStorage: sessionStorage,
+                ),
+              ),
             ),
           ),
           _entry(
@@ -117,6 +124,7 @@ class ProfileScreen extends StatelessWidget {
                 builder: (_) => SizeCheckScreen(
                   backendClient: backendClient,
                   bodyStore: bodyStore,
+                  sessionStorage: sessionStorage,
                 ),
               ),
             ),

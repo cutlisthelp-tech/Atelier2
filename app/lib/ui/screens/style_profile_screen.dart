@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../../services/local_store.dart';
 import '../../theme/tokens.dart';
+import '../widgets/empty_state.dart';
 
 /// Real user input only — nothing here is pre-filled or inferred.
 /// Persisted locally as JSON; Phase 9 migrates to remote sync.
 class StyleProfileScreen extends StatefulWidget {
-  const StyleProfileScreen({super.key, required this.store});
+  const StyleProfileScreen({
+    super.key,
+    required this.store,
+    this.sessionStorage = false,
+  });
 
   final StyleProfileStore store;
+  final bool sessionStorage;
 
   /// Must stay in sync with the backend FIT_SCALE — the ranking engine and
   /// the Phase 2 garment pipeline both handle all four fit values.
@@ -147,6 +153,7 @@ class _StyleProfileScreenState extends State<StyleProfileScreen> {
             : ListView(
                 padding: const EdgeInsets.all(AppSpacing.unit * 3),
                 children: [
+                  if (widget.sessionStorage) const SessionNote(),
                   _label('HEIGHT (CM)'),
                   TextField(
                     controller: _height,

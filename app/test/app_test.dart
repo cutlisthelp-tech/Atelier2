@@ -34,7 +34,7 @@ void main() {
 
     await tester.tap(find.text('WARDROBE'));
     await tester.pumpAndSettle();
-    expect(find.text('Your wardrobe is empty.'), findsOneWidget);
+    expect(find.textContaining('Your wardrobe is empty'), findsOneWidget);
 
     await tester.tap(find.text('PROFILE'));
     await tester.pumpAndSettle();

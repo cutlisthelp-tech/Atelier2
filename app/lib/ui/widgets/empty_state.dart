@@ -2,6 +2,26 @@ import 'package:flutter/material.dart';
 
 import '../../theme/tokens.dart';
 
+/// Honest label for the web preview's session-only store: the flows work,
+/// and the UI says plainly that nothing persists (no fake persistence).
+class SessionNote extends StatelessWidget {
+  const SessionNote({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.unit * 2),
+      child: Text(
+        'Session preview storage — nothing is saved after this tab closes.',
+        style: AppType.data.copyWith(
+          fontSize: 11,
+          color: AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
 /// Honest empty state — an invitation to act, never a dead end and never
 /// a fake placeholder (docs/DESIGN_SYSTEM.md §6).
 class EmptyState extends StatelessWidget {

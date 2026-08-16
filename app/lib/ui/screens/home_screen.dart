@@ -4,6 +4,7 @@ import '../../models/recommendation.dart';
 import '../../services/backend_client.dart';
 import '../../services/local_store.dart';
 import '../../theme/tokens.dart';
+import '../widgets/empty_state.dart';
 
 /// HOME — "Your Best Look" (DESIGN_SYSTEM §5). Real profiles + real wardrobe
 /// + real weather go to the backend; everything rendered comes from the
@@ -17,6 +18,7 @@ class HomeScreen extends StatefulWidget {
     required this.styleStore,
     required this.wardrobeStore,
     required this.homePlaceStore,
+    this.sessionStorage = false,
     this.onOpenTab,
   });
 
@@ -26,6 +28,7 @@ class HomeScreen extends StatefulWidget {
   final StyleProfileStore styleStore;
   final WardrobeStore wardrobeStore;
   final HomePlaceStore homePlaceStore;
+  final bool sessionStorage;
   final ValueChanged<int>? onOpenTab;
 
   @override
@@ -144,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       backgroundColor: AppColors.surfaceElevated,
       isScrollControlled: true,
-      builder: (_) => const _PlacePicker(),
+      builder: (_) => const PlacePicker(),
     );
     if (picked != null) {
       await widget.homePlaceStore.save(picked);
@@ -192,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.unit * 2),
+          if (widget.sessionStorage) const SessionNote(),
           if (_storageUnavailable)
             _prerequisite(
               'Local storage is unavailable here.',
@@ -852,14 +856,14 @@ class _SkeletonCard extends StatelessWidget {
 
 /// Bundled city presets are reference coordinates only — picking one is an
 /// explicit user choice, and manual lat/lon is validated before saving.
-class _PlacePicker extends StatefulWidget {
-  const _PlacePicker();
+class PlacePicker extends StatefulWidget {
+  const PlacePicker({super.key});
 
   @override
-  State<_PlacePicker> createState() => _PlacePickerState();
+  State<PlacePicker> createState() => _PlacePickerState();
 }
 
-class _PlacePickerState extends State<_PlacePicker> {
+class _PlacePickerState extends State<PlacePicker> {
   static const _presets = [
     HomePlace(label: 'Casablanca', latitude: 33.5731, longitude: -7.5898),
     HomePlace(label: 'Rabat', latitude: 34.0209, longitude: -6.8416),

@@ -87,8 +87,8 @@ void main() {
       )));
       await tester.pump();
 
-      expect(find.text('Your wardrobe is empty.'), findsOneWidget);
-      await tester.tap(find.text('Photograph a garment'));
+      expect(find.textContaining('Your wardrobe is empty'), findsOneWidget);
+      await tester.tap(find.text('Camera'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 600));
 

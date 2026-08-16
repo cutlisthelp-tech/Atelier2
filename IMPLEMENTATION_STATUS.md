@@ -315,6 +315,42 @@ Honest limits of this verification:
 - Formality/severity values are documented styling conventions, not learned
   — same status as the occasion tables (PRODUCT_SPEC §6 tunable baseline).
 
-## Phases 7–10
+## Phase 7 — Wardrobe module
+
+**Status: VERIFIED — 2026-08-16**
+
+Definition of Done: *"Best Outfit From My Closet" returns a real ranked
+outfit from photographed items only.*
+
+Evidence:
+
+- The WARDROBE tab is now the full module (PRODUCT_SPEC §10): rich honest
+  item cards (category or "Unidentified", confidence, fit/pattern/material
+  with Unknown left Unknown, real color swatches, LOW CONFIDENCE flags),
+  slot filter chips, add via camera **or** file, remove, and a "Best outfit
+  from my closet" panel (occasion + real place → same ranking brain as
+  HOME) rendering the shared ResultCard with real alternatives.
+- `pytest` — 60/60 passed. Five new Phase 7 tests: the five-fixture real
+  wardrobe yields exactly four distinct outfits with the full strategy set
+  `[best_match, safer, trend_forward, bold]`, #1 the top score; a
+  three-piece wardrobe yields one outfit (never padded); two real bodies
+  score the same closet differently (§3); the unplaceable hanger item is
+  reported, never guessed; double-call identical.
+- `flutter analyze` — no issues; `flutter test` — 35/35: rich cards read
+  real attributes, filters scope the list, closet scoring renders the
+  backend's alternatives, session-only storage is labeled honestly.
+- Web preview gained a **session-only in-memory store** (labeled in the UI:
+  "nothing is saved after this tab closes") so the wardrobe flow is
+  demonstrable end-to-end there: real fixture uploads → real analyses →
+  real closet recommendation with live weather.
+
+Honest limits of this verification:
+
+- Salient-object segmentation for cluttered flat-lay backgrounds remains
+  deferred to Phase 8 (recorded decision).
+- Wardrobe photos themselves are still never stored (BUILD_PLAN §5); only
+  analysis JSON persists, session-only on web.
+
+## Phases 8–10
 
 Not started. No feature flags are enabled.

@@ -4,6 +4,7 @@ import '../../models/size.dart';
 import '../../services/backend_client.dart';
 import '../../services/local_store.dart';
 import '../../theme/tokens.dart';
+import '../widgets/empty_state.dart';
 
 /// SIZE CHECK — Phase 5 (PRODUCT_SPEC §8).
 ///
@@ -16,10 +17,12 @@ class SizeCheckScreen extends StatefulWidget {
     super.key,
     required this.backendClient,
     this.bodyStore,
+    this.sessionStorage = false,
   });
 
   final BackendClient backendClient;
   final ScanRecordStore? bodyStore;
+  final bool sessionStorage;
 
   /// Categories the engine can size (tops, bottoms, one-pieces).
   static const categories = [
@@ -149,6 +152,7 @@ class _SizeCheckScreenState extends State<SizeCheckScreen> {
             : ListView(
                 padding: const EdgeInsets.all(AppSpacing.unit * 3),
                 children: [
+                  if (widget.sessionStorage) const SessionNote(),
                   Text(
                     'Copy the centimetre values from a real product size '
                     'chart; Atelier matches them against your real '

@@ -207,7 +207,9 @@ Transparency rules:
   never a canned temperature.
 - **Alternatives** (`strategy`: `best_match` / `safer` / `trend_forward` /
   `bold`) are reported only when the wardrobe actually supports them — never
-  padded to four.
+  padded to four. Phase 7 demonstrates the full set on a five-piece real
+  wardrobe (four distinct outfits); #2–#4 are curated strategies, not a
+  strict score ranking.
 - Garments with `category.value == null` are excluded as `unplaceable` and
   reported, never guessed into a slot.
 - Hard filters run before scoring: `banned_colors` against the real returned

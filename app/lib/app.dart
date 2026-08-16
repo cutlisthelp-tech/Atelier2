@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'config/feature_flags.dart';
@@ -33,7 +34,11 @@ class AtelierApp extends StatefulWidget {
 
 class _AtelierAppState extends State<AtelierApp> {
   late final ModelManager _modelManager = widget.modelManager ?? ModelManager();
-  late final KeyValueStore _store = widget.keyValueStore ?? FileKeyValueStore();
+  // The web preview has no app data directory: a session-only in-memory
+  // store keeps the flows demonstrable there, labeled honestly in the UI.
+  late final KeyValueStore _store =
+      widget.keyValueStore ?? (kIsWeb ? InMemoryKeyValueStore() : FileKeyValueStore());
+  static const bool _sessionStorage = kIsWeb;
   late final ConsentStore _consentStore =
       widget.consentStore ?? ConsentStore(_store);
   late final StyleProfileStore _styleStore =
@@ -71,6 +76,7 @@ class _AtelierAppState extends State<AtelierApp> {
               styleStore: _styleStore,
               wardrobeStore: _wardrobeStore,
               homePlaceStore: _homePlaceStore,
+              sessionStorage: _sessionStorage,
               onOpenTab: (i) => setState(() => _tab = i),
             ),
             const DiscoverScreen(),
@@ -78,6 +84,12 @@ class _AtelierAppState extends State<AtelierApp> {
             WardrobeScreen(
               backendClient: _backendClient,
               wardrobeStore: _wardrobeStore,
+              bodyStore: _bodyStore,
+              appearanceStore: _appearanceStore,
+              styleStore: _styleStore,
+              homePlaceStore: _homePlaceStore,
+              sessionStorage: _sessionStorage,
+              onOpenTab: (i) => setState(() => _tab = i),
             ),
             ProfileScreen(
               modelManager: _modelManager,
@@ -86,6 +98,7 @@ class _AtelierAppState extends State<AtelierApp> {
               backendClient: _backendClient,
               bodyStore: _bodyStore,
               appearanceStore: _appearanceStore,
+              sessionStorage: _sessionStorage,
             ),
           ],
         ),
