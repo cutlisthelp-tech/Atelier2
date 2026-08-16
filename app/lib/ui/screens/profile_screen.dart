@@ -9,6 +9,7 @@ import 'body_scan_screen.dart';
 import 'consent_screen.dart';
 import 'design_preview_screen.dart';
 import 'diagnostics_screen.dart';
+import 'size_check_screen.dart';
 import 'style_profile_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -105,6 +106,19 @@ class ProfileScreen extends StatelessWidget {
             subtitle: 'Height, fit, aesthetics, bans, budget',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => StyleProfileScreen(store: styleStore)),
+            ),
+          ),
+          _entry(
+            context,
+            title: 'Size check',
+            subtitle: 'Match a real size chart to your real measurements',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => SizeCheckScreen(
+                  backendClient: backendClient,
+                  bodyStore: bodyStore,
+                ),
+              ),
             ),
           ),
           _entry(

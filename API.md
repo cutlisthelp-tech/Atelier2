@@ -256,6 +256,65 @@ Failures `422` (input-derived): `POOR_IMAGE`, `NO_PERSON`,
 `503` (service-side): `MODEL_MISSING` (no `FASHN_API_KEY`, or the provider
 rejected it), `RATE_LIMITED`, `MODEL_FAILED`, `NETWORK_ERROR`.
 
+## `POST /size/recommend` — Phase 5
+
+JSON body: the client sends the real `/analysis/body` payload verbatim plus a
+size chart the user copied from a real product page (centimetre values per
+size — user-provided data, never catalog-scraped).
+
+Request:
+
+```json
+{
+  "category": "shirt",
+  "fit_type": "regular",
+  "body_profile": { "…": "/analysis/body response, verbatim" },
+  "size_chart": {
+    "brand": "optional label",
+    "rows": [
+      { "label": "S", "chest_cm": 88, "shoulder_cm": 44, "sleeve_cm": 60 },
+      { "label": "M", "chest_cm": 92, "shoulder_cm": 46, "sleeve_cm": 62 }
+    ]
+  }
+}
+```
+
+Success `200`:
+
+```json
+{
+  "recommended": { "label": "M", "score": 1.0 },
+  "confidence": 0.9,
+  "flags": [],
+  "fit_type": "regular",
+  "brand": "optional label",
+  "regions": [
+    { "region": "chest", "measured_cm": null, "chart_cm": 92,
+      "status": "not_measurable", "note": "not measurable from one photo" },
+    { "region": "shoulder", "measured_cm": 44.0, "chart_cm": 46.0,
+      "delta_cm": 0.0, "status": "matched" }
+  ],
+  "sizes": [ { "label": "S", "score": 0.5 }, { "label": "M", "score": 1.0 } ],
+  "note": "Scored without chest (not measurable from one photo); …"
+}
+```
+
+Honesty contract:
+
+- Only the real Phase 1 measurements score: shoulder, hip and arm-as-sleeve.
+  Chest/waist are `null` by design → excluded from scoring, listed as
+  `not_measurable`. `length` is shown but never scored (no honest body
+  counterpart).
+- Matching happens purely in centimetre space (Brand Size Normalization,
+  PRODUCT_SPEC §8): brand labels are opaque; documented garment ease per fit
+  type (slim/regular/relaxed/oversized) plus a 4 cm tolerance window per
+  region. `confidence = 0.7·score + 0.3·coverage`; below 0.5 the result is
+  returned with `LOW_CONFIDENCE`.
+- Failures `422`: `NO_SIZE_CHART` (fewer than two sized rows),
+  `INSUFFICIENT_DATA` (the chart's regions have no measurable body input —
+  e.g. chest/waist-only charts, or footwear, which needs a foot length the
+  scan does not measure). Plain `422` for taxonomy/fit/range validation.
+
 ## Error envelope
 
 Domain errors always use the `docs/PRODUCT_SPEC.md §12` taxonomy:

@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/analysis.dart';
 import '../models/recommendation.dart';
+import '../models/size.dart';
 import '../models/tryon.dart';
 
 class BackendClient {
@@ -128,6 +129,63 @@ class BackendClient {
       return const TryOnFailure(
         code: 'NETWORK_ERROR',
         message: 'Could not reach the try-on service. Check the connection and try again.',
+      );
+    }
+  }
+
+  /// Phase 5: real body profile + real user-entered size chart → size.
+  Future<SizeOutcome> recommendSize({
+    required String category,
+    required String fitType,
+    required Map<String, dynamic> bodyProfile,
+    required List<Map<String, dynamic>> rows,
+    String brand = '',
+  }) async {
+    if (!isConfigured) {
+      return const SizeFailure(
+        code: 'NETWORK_ERROR',
+        message: 'No backend is configured. Set BACKEND_URL when building the app.',
+      );
+    }
+    try {
+      final resp = await _http
+          .post(
+            Uri.parse('$baseUrl/size/recommend'),
+            headers: {'content-type': 'application/json'},
+            body: json.encode({
+              'category': category,
+              'fit_type': fitType,
+              'body_profile': bodyProfile,
+              'size_chart': {'brand': brand, 'rows': rows},
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+      final decoded = json.decode(resp.body);
+      if (resp.statusCode == 200) {
+        return SizeOk(
+          SizeRecommendation.fromJson(decoded as Map<String, dynamic>),
+        );
+      }
+      final error = (decoded as Map<String, dynamic>)['error'];
+      if (error is Map<String, dynamic>) {
+        return SizeFailure(
+          code: error['code'] as String,
+          message: error['message'] as String,
+        );
+      }
+      return SizeFailure(
+        code: 'NETWORK_ERROR',
+        message: 'The backend rejected the request (${resp.statusCode}).',
+      );
+    } on FormatException {
+      return const SizeFailure(
+        code: 'NETWORK_ERROR',
+        message: 'The backend returned an unreadable response.',
+      );
+    } catch (_) {
+      return const SizeFailure(
+        code: 'NETWORK_ERROR',
+        message: 'Could not reach the size engine. Check the connection and try again.',
       );
     }
   }

@@ -1,5 +1,5 @@
 Launching lib/main.dart on Web Server in debug mode...
-Waiting for connection from debug service on Web Server...         31.7s
+Waiting for connection from debug service on Web Server...         35.4s
 lib/main.dart is being served at http://0.0.0.0:8080
 The web-server device requires the Dart Debug Chrome extension for debugging. Consider using the Chrome or Edge devices for an improved development workflow.
 
@@ -11,6 +11,6 @@ d Detach (terminate "flutter run" but leave application running).
 c Clear the screen
 q Quit (terminate the application on the device).
 
-Debug service listening on ws://127.0.0.1:39771/JYHVoegxRks=/ws
-A Dart VM Service on Web Server is available at: http://127.0.0.1:39771/JYHVoegxRks=
-The Flutter DevTools debugger and profiler on Web Server is available at: http://127.0.0.1:39771/JYHVoegxRks=/devtools/?uri=ws://127.0.0.1:39771/JYHVoegxRks=/ws
+Debug service listening on ws://127.0.0.1:46103/QkueeoAcwxQ=/ws
+A Dart VM Service on Web Server is available at: http://127.0.0.1:46103/QkueeoAcwxQ=
+The Flutter DevTools debugger and profiler on Web Server is available at: http://127.0.0.1:46103/QkueeoAcwxQ=/devtools/?uri=ws://127.0.0.1:46103/QkueeoAcwxQ=/ws

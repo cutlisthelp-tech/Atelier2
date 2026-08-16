@@ -238,6 +238,45 @@ Honest limits of this verification:
   (DESIGN_SYSTEM §5). It is never a claim of precise physical simulation
   (PRODUCT_SPEC §7).
 
-## Phases 5–10
+## Phase 5 — Size Engine
+
+**Status: VERIFIED — 2026-08-16**
+
+Definition of Done: *a real product with a real size chart returns a real
+size + confidence.*
+
+Evidence:
+
+- Chart source is the user's own real data: centimetre values copied from a
+  real product page (rule 4 — no catalog scraping, no demo products). Brand
+  Size Normalization (§8) is satisfied by matching purely in cm space with
+  opaque brand labels.
+- `pytest` — 49/49 passed. Nine new Phase 5 tests: real `/analysis/body`
+  runs on fixture photos feed the engine; a chart built at the real
+  measurements + documented ease returns the expected size with score 1.0
+  and confidence 0.9 (coverage 2/3 — chest in the chart but honestly
+  `not_measurable`); double-call identical; two real bodies score the same
+  chart differently (§3 personalization); fit type moves the match;
+  chest/waist-only chart → `INSUFFICIENT_DATA`; one-row/empty chart →
+  `NO_SIZE_CHART`; footwear → `INSUFFICIENT_DATA` (no foot measurement
+  exists); unknown category → plain 422.
+- `flutter analyze` — no issues. `flutter test` — 32/32 passed: envelope
+  parsing, `NO_SIZE_CHART` surfacing, result view shows the recommended
+  size + confidence + the honest chest note + LOW CONFIDENCE flag, the
+  screen states the honest "not measured yet" prerequisite without a stored
+  scan, and renders the chart form with one.
+- Web preview: PROFILE → Size check shows the honest prerequisite on
+  platforms without a stored scan; with a backend and a real scan the form
+  submits to `POST /size/recommend`.
+
+Honest limits of this verification:
+
+- Only shoulder, hip and arm-as-sleeve score; chest/waist remain `null` by
+  design and are listed, never guessed. `length` is displayed but never
+  scored (no honest body counterpart).
+- Outfit Detail's `[Check Sizes]` button wires to this engine when that
+  screen lands; today the flow lives under PROFILE → Size check.
+
+## Phases 6–10
 
 Not started. No feature flags are enabled.
