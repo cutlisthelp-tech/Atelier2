@@ -4,6 +4,8 @@ import '../../models/size.dart';
 import '../../services/backend_client.dart';
 import '../../services/local_store.dart';
 import '../../theme/tokens.dart';
+import '../widgets/atelier_button.dart';
+import '../widgets/editorial_backdrop.dart';
 import '../widgets/empty_state.dart';
 import 'size_check_screen.dart';
 
@@ -25,11 +27,15 @@ class FitFlowScreen extends StatefulWidget {
     required this.backendClient,
     this.bodyStore,
     this.sessionStorage = false,
+    this.onStartScan,
   });
 
   final BackendClient backendClient;
   final ScanRecordStore? bodyStore;
   final bool sessionStorage;
+
+  /// Optional route into the consent-gated body scan (wired by Profile).
+  final VoidCallback? onStartScan;
 
   @override
   State<FitFlowScreen> createState() => _FitFlowScreenState();
@@ -137,78 +143,104 @@ class _FitFlowScreenState extends State<FitFlowScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: AppColors.surfacePrimary,
-        title: Text('Fit check', style: AppType.interface),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Fit check',
+          style: AppType.display.copyWith(
+            fontSize: 22,
+            letterSpacing: 0.2,
+            color: AppColors.textPrimary,
+          ),
+        ),
       ),
       body: Stack(
         children: [
-          // Content behind the glass — blur needs something to blur
-          // (DESIGN_SYSTEM §1 honest materiality).
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.graphite,
-                    AppColors.ink,
-                    AppColors.ink,
-                  ],
-                  stops: [0.0, 0.55, 1.0],
-                ),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: 90,
-                    right: -60,
-                    child: Container(
-                      width: 220,
-                      height: 220,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color:
-                            AppColors.spotlightGold.withValues(alpha: 0.28),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 620,
-                    left: -80,
-                    child: Container(
-                      width: 260,
-                      height: 260,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.fog.withValues(alpha: 0.14),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          const Positioned.fill(
+            child: EditorialBackdrop(
+              scene: 'assets/editorial/scene_02.jpg',
+              photoStrength: 0.42,
             ),
+          ),
+          // Fashion-tech overlay: measurement rulers + silhouette, faint —
+          // ambience only, never data.
+          const Positioned.fill(
+            child: IgnorePointer(child: _FitTechLayer()),
           ),
           !_loaded
               ? const Center(
                   child: Text('Loading…', style: AppType.interface),
                 )
               : _storageUnavailable
-                  ? _plain(
-                      'Local storage is unavailable here, so your body '
-                      'profile can’t be read. Run Atelier on Android for '
-                      'the full flow.',
+                  ? _hero(
+                      'Local storage is unavailable here.',
+                      'Your body profile can’t be read on this platform. '
+                          'Run Atelier on Android for the full flow.',
                     )
                   : _body == null
-                      ? _plain(
-                          'Atelier hasn’t measured you yet. Run a body '
-                          'scan in Profile first — fit comes from your '
-                          'real shoulder, hip and arm measurements, never '
-                          'from a guess.',
+                      ? _hero(
+                          'Atelier hasn’t measured you yet.',
+                          'Your fit starts with your real proportions — '
+                              'shoulder, hip and arm, read from one real '
+                              'photo. Never from a guess.',
+                          actionLabel: 'Start body scan',
+                          onAction: widget.onStartScan,
                         )
                       : _flow(_body!),
         ],
+      ),
+    );
+  }
+
+  Widget _hero(
+    String title,
+    String message, {
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.unit * 3),
+        child: GlassSurface(
+          padding: const EdgeInsets.all(AppSpacing.unit * 3),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'FIT INTELLIGENCE',
+                style: AppType.caption.copyWith(
+                  fontSize: 10,
+                  letterSpacing: 2.4,
+                  color: AppColors.spotlightGold,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.unit * 1.5),
+              Text(
+                title,
+                style: AppType.headline.copyWith(
+                  fontSize: 26,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.unit),
+              Text(
+                message,
+                style: AppType.interface.copyWith(
+                  fontSize: 14,
+                  height: 1.55,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              if (actionLabel != null && onAction != null) ...[
+                const SizedBox(height: AppSpacing.unit * 3),
+                AtelierButton(label: actionLabel, onPressed: onAction),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -280,10 +312,9 @@ class _FitFlowScreenState extends State<FitFlowScreen> {
                 ),
                 const SizedBox(height: AppSpacing.unit),
               ],
-              _goldButton(
-                _step == 0
-                    ? 'Continue'
-                    : (_busy ? 'Matching…' : 'Check my fit'),
+              AtelierButton(
+                label: _step == 0 ? 'Continue' : 'Check my fit',
+                loading: _step == 1 && _busy,
                 onPressed: _step == 0
                     ? () => setState(() => _step = 1)
                     : (_busy ? null : _submit),
@@ -463,19 +494,14 @@ class _FitFlowScreenState extends State<FitFlowScreen> {
       for (final r in _rows) _rowCard(r),
       SizedBox(
         height: AppSpacing.minTapTarget,
-        child: OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(color: AppColors.fog.withValues(alpha: 0.35)),
-            foregroundColor: AppColors.textPrimary,
-          ),
+        child: AtelierButton(
+          label: 'Add a size',
+          variant: AtelierButtonVariant.secondary,
+          fullWidth: false,
           onPressed: () => setState(() {
             _rows.add(_Row(''));
             _resetOutcome();
           }),
-          child: Text(
-            'Add a size',
-            style: AppType.interface.copyWith(fontSize: 13),
-          ),
         ),
       ),
       const SizedBox(height: AppSpacing.unit * 2),
@@ -615,41 +641,10 @@ class _FitFlowScreenState extends State<FitFlowScreen> {
     );
   }
 
-  Widget _goldButton(String label, {VoidCallback? onPressed}) {
-    return SizedBox(
-      height: AppSpacing.minTapTarget,
-      width: double.infinity,
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.accentSignature,
-          foregroundColor: AppColors.surfacePrimary,
-        ),
-        onPressed: onPressed,
-        child: Text(label, style: AppType.interface.copyWith(fontSize: 15)),
-      ),
-    );
-  }
-
-  Widget _plain(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.unit * 3),
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: AppType.interface.copyWith(
-            fontSize: 15,
-            height: 1.5,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _failure(String code, String message) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.unit),
+    return GlassSurface(
+      padding: const EdgeInsets.all(AppSpacing.unit * 2.5),
+      border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -671,4 +666,66 @@ class _FitFlowScreenState extends State<FitFlowScreen> {
       ),
     );
   }
+}
+
+/// Faint fashion-tech overlay: vertical measurement rulers and a human
+/// silhouette with gold seam ticks. Purely ambient — it carries no data and
+/// never implies a measurement (No-Fake-Data doctrine).
+class _FitTechLayer extends StatelessWidget {
+  const _FitTechLayer();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _FitTechPainter(),
+      child: const SizedBox.expand(),
+    );
+  }
+}
+
+class _FitTechPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final ruler = Paint()
+      ..color = AppColors.fog.withValues(alpha: 0.05)
+      ..strokeWidth = 1;
+    for (var x = 24.0; x < size.width; x += 48) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), ruler);
+    }
+    final tick = Paint()
+      ..color = AppColors.fog.withValues(alpha: 0.10)
+      ..strokeWidth = 1;
+    for (var y = 0.0; y < size.height; y += 24) {
+      canvas.drawLine(const Offset(16, 0) + Offset(0, y),
+          Offset(24, y), tick);
+    }
+    // Silhouette, right-aligned, very faint.
+    final cx = size.width * 0.82;
+    final top = size.height * 0.16;
+    final h = size.height * 0.6;
+    final silhouette = Paint()
+      ..color = AppColors.spotlightGold.withValues(alpha: 0.07)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    final path = Path()
+      ..addOval(Rect.fromLTWH(cx - h * 0.05, top, h * 0.1, h * 0.12))
+      ..moveTo(cx - h * 0.11, top + h * 0.16)
+      ..lineTo(cx + h * 0.11, top + h * 0.16)
+      ..lineTo(cx + h * 0.08, top + h * 0.5)
+      ..lineTo(cx + h * 0.09, top + h * 0.95)
+      ..moveTo(cx - h * 0.11, top + h * 0.16)
+      ..lineTo(cx - h * 0.08, top + h * 0.5)
+      ..lineTo(cx - h * 0.09, top + h * 0.95);
+    canvas.drawPath(path, silhouette);
+    final seam = Paint()
+      ..color = AppColors.spotlightGold.withValues(alpha: 0.16)
+      ..strokeWidth = 1.2;
+    canvas.drawLine(
+        Offset(cx - h * 0.11, top + h * 0.2),
+        Offset(cx + h * 0.11, top + h * 0.2),
+        seam);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

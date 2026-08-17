@@ -11,6 +11,7 @@ import 'ui/screens/home_screen.dart';
 import 'ui/screens/profile_screen.dart';
 import 'ui/screens/try_on_screen.dart';
 import 'ui/screens/wardrobe_screen.dart';
+import 'ui/widgets/editorial_backdrop.dart';
 
 class AtelierApp extends StatefulWidget {
   const AtelierApp({
@@ -41,8 +42,7 @@ class _AtelierAppState extends State<AtelierApp> {
   static const bool _sessionStorage = kIsWeb;
   late final ConsentStore _consentStore =
       widget.consentStore ?? ConsentStore(_store);
-  late final StyleProfileStore _styleStore =
-      widget.styleStore ?? StyleProfileStore(_store);
+  late final StyleProfileStore _styleStore = StyleProfileStore(_store);
   late final BackendClient _backendClient =
       widget.backendClient ?? BackendClient();
   late final ScanRecordStore _bodyStore = ScanRecordStore.body(_store);
@@ -52,6 +52,16 @@ class _AtelierAppState extends State<AtelierApp> {
   late final WardrobeStore _wardrobeStore = WardrobeStore(_store);
   late final HomePlaceStore _homePlaceStore = HomePlaceStore(_store);
   int _tab = 0;
+
+  /// One campaign scene per section; switching tabs crossfades the world
+  /// instead of cutting it (assets/editorial/PROVENANCE.md).
+  static const _scenes = [
+    'assets/editorial/scene_03.jpg', // HOME
+    'assets/editorial/scene_04.jpg', // DISCOVER
+    'assets/editorial/scene_02.jpg', // TRY ON
+    'assets/editorial/scene_01.jpg', // WARDROBE
+    'assets/editorial/scene_02.jpg', // PROFILE
+  ];
 
   @override
   void initState() {
@@ -66,39 +76,48 @@ class _AtelierAppState extends State<AtelierApp> {
       debugShowCheckedModeBanner: false,
       theme: buildAtelierTheme(),
       home: Scaffold(
-        body: IndexedStack(
-          index: _tab,
+        backgroundColor: Colors.transparent,
+        extendBody: true,
+        body: Stack(
           children: [
-            HomeScreen(
-              backendClient: _backendClient,
-              bodyStore: _bodyStore,
-              appearanceStore: _appearanceStore,
-              styleStore: _styleStore,
-              wardrobeStore: _wardrobeStore,
-              homePlaceStore: _homePlaceStore,
-              sessionStorage: _sessionStorage,
-              onOpenTab: (i) => setState(() => _tab = i),
-            ),
-            const DiscoverScreen(),
-            TryOnScreen(backendClient: _backendClient),
-            WardrobeScreen(
-              backendClient: _backendClient,
-              wardrobeStore: _wardrobeStore,
-              bodyStore: _bodyStore,
-              appearanceStore: _appearanceStore,
-              styleStore: _styleStore,
-              homePlaceStore: _homePlaceStore,
-              sessionStorage: _sessionStorage,
-              onOpenTab: (i) => setState(() => _tab = i),
-            ),
-            ProfileScreen(
-              modelManager: _modelManager,
-              consentStore: _consentStore,
-              styleStore: _styleStore,
-              backendClient: _backendClient,
-              bodyStore: _bodyStore,
-              appearanceStore: _appearanceStore,
-              sessionStorage: _sessionStorage,
+            EditorialBackdrop(scene: _scenes[_tab]),
+            IndexedStack(
+              index: _tab,
+              children: [
+                HomeScreen(
+                  backendClient: _backendClient,
+                  bodyStore: _bodyStore,
+                  appearanceStore: _appearanceStore,
+                  styleStore: _styleStore,
+                  wardrobeStore: _wardrobeStore,
+                  homePlaceStore: _homePlaceStore,
+                  sessionStorage: _sessionStorage,
+                  onOpenTab: (i) => setState(() => _tab = i),
+                ),
+                const DiscoverScreen(),
+                TryOnScreen(backendClient: _backendClient),
+                WardrobeScreen(
+                  backendClient: _backendClient,
+                  wardrobeStore: _wardrobeStore,
+                  bodyStore: _bodyStore,
+                  appearanceStore: _appearanceStore,
+                  styleStore: _styleStore,
+                  homePlaceStore: _homePlaceStore,
+                  sessionStorage: _sessionStorage,
+                  onOpenTab: (i) => setState(() => _tab = i),
+                ),
+                ProfileScreen(
+                  modelManager: _modelManager,
+                  consentStore: _consentStore,
+                  styleStore: _styleStore,
+                  backendClient: _backendClient,
+                  bodyStore: _bodyStore,
+                  appearanceStore: _appearanceStore,
+                  wardrobeStore: _wardrobeStore,
+                  sessionStorage: _sessionStorage,
+                  onOpenTab: (i) => setState(() => _tab = i),
+                ),
+              ],
             ),
           ],
         ),
@@ -133,10 +152,11 @@ class _GlassNavBar extends StatelessWidget {
     return GlassSurface(
       base: AppGlass.navBase,
       alpha: AppGlass.navAlpha,
-      border: Border(top: BorderSide(color: AppColors.borderSubtle)),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      border: Border(top: BorderSide(color: AppColors.borderHairline)),
       child: SafeArea(
         child: SizedBox(
-          height: 56,
+          height: 60,
           child: Row(
             children: [
               for (var i = 0; i < _tabs.length; i++)
@@ -171,22 +191,45 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.textPrimary : AppColors.textSecondary;
+    final color = selected ? AppColors.textPrimary : AppColors.textTertiary;
     return InkWell(
       onTap: onTap,
+      splashColor: AppColors.spotlightGold.withValues(alpha: 0.08),
+      highlightColor: AppColors.spotlightGold.withValues(alpha: 0.05),
       child: SizedBox(
         height: AppSpacing.minTapTarget,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: color),
-            const SizedBox(height: 2),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 260),
+              child: Icon(
+                selected ? _filled(icon) : icon,
+                key: ValueKey(selected),
+                size: 20,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 3),
             Text(
               label,
-              style: AppType.interface.copyWith(
-                fontSize: 9,
-                letterSpacing: 1.1,
+              style: AppType.caption.copyWith(
+                fontSize: 8.5,
+                letterSpacing: 1.4,
                 color: color,
+              ),
+            ),
+            const SizedBox(height: 3),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOut,
+              width: selected ? 14 : 3,
+              height: 2,
+              decoration: BoxDecoration(
+                color: selected
+                    ? AppColors.spotlightGold
+                    : AppColors.fog.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(1),
               ),
             ),
           ],
@@ -194,4 +237,13 @@ class _NavItem extends StatelessWidget {
       ),
     );
   }
+
+  IconData _filled(IconData outlined) => switch (outlined) {
+        Icons.home_outlined => Icons.home,
+        Icons.explore_outlined => Icons.explore,
+        Icons.auto_awesome_outlined => Icons.auto_awesome,
+        Icons.checkroom_outlined => Icons.checkroom,
+        Icons.person_outline => Icons.person,
+        _ => outlined,
+      };
 }

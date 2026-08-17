@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/tryon.dart';
 import '../../services/backend_client.dart';
 import '../../theme/tokens.dart';
+import '../widgets/atelier_button.dart';
 
 /// TRY ON — Choose Photo + Choose Garment → labeled render (DESIGN_SYSTEM §5).
 ///
@@ -84,21 +85,30 @@ class _TryOnScreenState extends State<TryOnScreen> {
         padding: const EdgeInsets.all(AppSpacing.unit * 3),
         children: [
           Text(
-            'Try On',
-            style: AppType.display.copyWith(
-              fontSize: 28,
-              color: AppColors.textPrimary,
+            'VIRTUAL TRY-ON',
+            style: AppType.caption.copyWith(
+              fontSize: 10,
+              letterSpacing: 2.4,
+              color: AppColors.spotlightGold,
             ),
           ),
           const SizedBox(height: AppSpacing.unit),
           Text(
-            'A hosted try-on model dresses your photo in the garment, and '
-            'the result is always labeled with its method and a real '
-            'confidence — never a claim of precise physical simulation.',
+            'Try On',
+            style: AppType.displayXL.copyWith(
+              fontSize: 38,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.half),
+          Text(
+            'The studio dresses your photo in the garment. Every render is '
+            'labeled with its method and a real confidence — never a claim '
+            'of precise physical simulation.',
             style: AppType.interface.copyWith(
-              fontSize: 14,
-              height: 1.5,
-              color: AppColors.textSecondary,
+              fontSize: 13,
+              height: 1.55,
+              color: AppColors.textTertiary,
             ),
           ),
           const SizedBox(height: AppSpacing.unit * 3),
@@ -119,8 +129,16 @@ class _TryOnScreenState extends State<TryOnScreen> {
             width: double.infinity,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.textPrimary,
-                foregroundColor: AppColors.surfacePrimary,
+                backgroundColor: AppColors.graphite.withValues(alpha: 0.65),
+                foregroundColor: AppColors.textPrimary,
+                side: BorderSide(
+                  color: _person == null || _garment == null
+                      ? AppColors.borderHairline
+                      : AppColors.goldHairline,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               onPressed: _person == null || _garment == null ? null : _render,
               child: Text(
@@ -151,81 +169,69 @@ class _SourceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassSurface(
       padding: const EdgeInsets.all(AppSpacing.unit * 2),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(AppSpacing.unit * 2),
-        border: Border.all(color: AppColors.borderSubtle),
-      ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.surfacePrimary,
-              borderRadius: BorderRadius.circular(AppSpacing.unit),
-            ),
-            child: bytes == null
-                ? const Icon(
-                    Icons.person_outline,
-                    color: AppColors.textSecondary,
-                  )
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(AppSpacing.unit),
-                    child: Image.memory(bytes!, fit: BoxFit.cover),
-                  ),
-          ),
-          const SizedBox(width: AppSpacing.unit * 2),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          Row(
+            children: [
+              Text(
+                label,
+                style: AppType.caption.copyWith(
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: AppColors.spotlightGold,
+                ),
+              ),
+              const Spacer(),
+              if (bytes != null)
                 Text(
-                  label,
+                  'READY',
                   style: AppType.data.copyWith(
-                    fontSize: 11,
-                    letterSpacing: 1.4,
+                    fontSize: 10,
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.half),
-                Wrap(
-                  spacing: AppSpacing.unit,
-                  children: [
-                    SizedBox(
-                      height: AppSpacing.minTapTarget,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppColors.borderSubtle),
-                          foregroundColor: AppColors.textPrimary,
-                        ),
-                        onPressed: () => onPick(ImageSource.camera),
-                        child: Text(
-                          'Camera',
-                          style: AppType.interface.copyWith(fontSize: 13),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: AppSpacing.minTapTarget,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppColors.borderSubtle),
-                          foregroundColor: AppColors.textPrimary,
-                        ),
-                        onPressed: () => onPick(ImageSource.gallery),
-                        child: Text(
-                          'Choose file',
-                          style: AppType.interface.copyWith(fontSize: 13),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.unit),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppSpacing.unit * 1.5),
+            child: SizedBox(
+              height: 150,
+              width: double.infinity,
+              child: bytes == null
+                  ? Container(
+                      color: AppColors.inkDeep.withValues(alpha: 0.5),
+                      child: const Center(
+                        child: Icon(
+                          Icons.person_outline,
+                          size: 40,
+                          color: AppColors.textTertiary,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    )
+                  : Image.memory(bytes!, fit: BoxFit.cover),
             ),
+          ),
+          const SizedBox(height: AppSpacing.unit),
+          Wrap(
+            spacing: AppSpacing.unit,
+            children: [
+              AtelierButton(
+                label: 'Camera',
+                variant: AtelierButtonVariant.secondary,
+                fullWidth: false,
+                onPressed: () => onPick(ImageSource.camera),
+              ),
+              AtelierButton(
+                label: 'Choose file',
+                variant: AtelierButtonVariant.ghost,
+                fullWidth: false,
+                onPressed: () => onPick(ImageSource.gallery),
+              ),
+            ],
           ),
         ],
       ),
@@ -426,8 +432,9 @@ class _Failure extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.unit),
+    return GlassSurface(
+      padding: const EdgeInsets.all(AppSpacing.unit * 2.5),
+      border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

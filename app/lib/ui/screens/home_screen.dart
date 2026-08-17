@@ -4,6 +4,7 @@ import '../../models/recommendation.dart';
 import '../../services/backend_client.dart';
 import '../../services/local_store.dart';
 import '../../theme/tokens.dart';
+import '../widgets/atelier_button.dart';
 import '../widgets/empty_state.dart';
 
 /// HOME — "Your Best Look" (DESIGN_SYSTEM §5). Real profiles + real wardrobe
@@ -188,10 +189,26 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(AppSpacing.unit * 3),
         children: [
           Text(
+            'ATELIER',
+            style: AppType.caption.copyWith(
+              fontSize: 10,
+              letterSpacing: 5,
+              color: AppColors.spotlightGold,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.unit),
+          Text(
             'Your Best Look',
-            style: AppType.display.copyWith(
-              fontSize: 28,
-              color: AppColors.textPrimary,
+            style: AppType.displayXL.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: AppSpacing.half),
+          Text(
+            'Your personal fashion intelligence — scored on you, never on '
+            'hype.',
+            style: AppType.interface.copyWith(
+              fontSize: 13,
+              height: 1.5,
+              color: AppColors.textTertiary,
             ),
           ),
           const SizedBox(height: AppSpacing.unit * 2),
@@ -232,27 +249,14 @@ class _HomeScreenState extends State<HomeScreen> {
             _placeRow(),
             const SizedBox(height: AppSpacing.unit * 2),
             Wrap(
-              spacing: AppSpacing.unit,
-              runSpacing: AppSpacing.unit,
+              spacing: AppSpacing.half,
+              runSpacing: AppSpacing.half,
               children: [
                 for (final o in _occasions)
-                  ChoiceChip(
-                    label: Text(
-                      o,
-                      style: AppType.interface.copyWith(
-                        fontSize: 13,
-                        color: o == _occasion
-                            ? AppColors.surfacePrimary
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                    // 44pt minimum tap target (DESIGN_SYSTEM §2).
-                    padding: const EdgeInsets.symmetric(vertical: 6),
+                  _OccasionChip(
+                    label: o,
                     selected: o == _occasion,
-                    selectedColor: AppColors.textPrimary,
-                    backgroundColor: AppColors.surfaceElevated,
-                    side: BorderSide(color: AppColors.borderSubtle),
-                    onSelected: (_) => setState(() {
+                    onTap: () => setState(() {
                       _occasion = o;
                       _outcome = null;
                     }),
@@ -263,20 +267,9 @@ class _HomeScreenState extends State<HomeScreen> {
             if (_fetching)
               const _SkeletonCard()
             else ...[
-              SizedBox(
-                height: AppSpacing.minTapTarget,
-                width: double.infinity,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accentSignature,
-                    foregroundColor: AppColors.surfacePrimary,
-                  ),
-                  onPressed: _recommend,
-                  child: Text(
-                    'Score my best outfit',
-                    style: AppType.interface.copyWith(fontSize: 15),
-                  ),
-                ),
+              AtelierButton(
+                label: 'Score my best outfit',
+                onPressed: _recommend,
               ),
               const SizedBox(height: AppSpacing.unit * 2),
               if (_outcome case RecommendSuccess(:final recommendation))
@@ -304,85 +297,96 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.unit * 2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: AppType.display.copyWith(
-              fontSize: 20,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.unit),
-          Text(
-            message,
-            style: AppType.interface.copyWith(
-              fontSize: 15,
-              height: 1.5,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.unit * 2),
-          if (actionLabel.isNotEmpty)
-            SizedBox(
-              height: AppSpacing.minTapTarget,
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.textPrimary,
-                  foregroundColor: AppColors.surfacePrimary,
-                ),
-                onPressed: onAction,
-                child: Text(
-                  actionLabel,
-                  style: AppType.interface.copyWith(fontSize: 15),
-                ),
+      child: GlassSurface(
+        padding: const EdgeInsets.all(AppSpacing.unit * 3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'YOUR BEST LOOK',
+              style: AppType.caption.copyWith(
+                fontSize: 10,
+                letterSpacing: 2.4,
+                color: AppColors.spotlightGold,
               ),
             ),
-        ],
+            const SizedBox(height: AppSpacing.unit * 1.5),
+            Text(
+              title,
+              style: AppType.headline.copyWith(
+                fontSize: 26,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.unit),
+            Text(
+              message,
+              style: AppType.interface.copyWith(
+                fontSize: 14,
+                height: 1.55,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.unit * 3),
+            if (actionLabel.isNotEmpty)
+              AtelierButton(label: actionLabel, onPressed: onAction),
+          ],
+        ),
       ),
     );
   }
 
   Widget _placeRow() {
     final place = _place!;
-    return Row(
-      children: [
-        const Icon(
-          Icons.location_on_outlined,
-          size: 18,
-          color: AppColors.textSecondary,
-        ),
-        const SizedBox(width: AppSpacing.unit),
-        Expanded(
-          child: Text(
-            place.label.isEmpty
-                ? '${place.latitude.toStringAsFixed(2)}, '
-                      '${place.longitude.toStringAsFixed(2)}'
-                : place.label,
-            style: AppType.interface.copyWith(color: AppColors.textPrimary),
+    return GlassSurface(
+      highlight: false,
+      depth: false,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.unit * 2,
+        vertical: AppSpacing.unit * 1.5,
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.location_on_outlined,
+            size: 16,
+            color: AppColors.spotlightGold,
           ),
-        ),
-        SizedBox(
-          height: AppSpacing.minTapTarget,
-          child: TextButton(
-            onPressed: _pickPlace,
+          const SizedBox(width: AppSpacing.unit),
+          Expanded(
             child: Text(
-              'Change',
-              style: AppType.interface.copyWith(
-                fontSize: 13,
-                color: AppColors.textSecondary,
+              place.label.isEmpty
+                  ? '${place.latitude.toStringAsFixed(2)}, '
+                        '${place.longitude.toStringAsFixed(2)}'
+                  : place.label,
+              style: AppType.data.copyWith(
+                fontSize: 12,
+                color: AppColors.textPrimary,
               ),
             ),
           ),
-        ),
-      ],
+          SizedBox(
+            height: AppSpacing.minTapTarget,
+            child: TextButton(
+              onPressed: _pickPlace,
+              child: Text(
+                'Change',
+                style: AppType.interface.copyWith(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _failure(String code, String message) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.unit),
+    return GlassSurface(
+      padding: const EdgeInsets.all(AppSpacing.unit * 2.5),
+      border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -400,6 +404,60 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 44pt glass chip (DESIGN_SYSTEM §2) with a soft selected state.
+class _OccasionChip extends StatelessWidget {
+  const _OccasionChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: AppSpacing.minTapTarget,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          splashColor: AppColors.spotlightGold.withValues(alpha: 0.08),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppColors.textPrimary
+                  : AppColors.inkDeep.withValues(alpha: 0.35),
+              border: Border.all(
+                color: selected
+                    ? AppColors.textPrimary.withValues(alpha: 0.6)
+                    : AppColors.borderHairline,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Center(
+              child: Text(
+                label,
+                style: AppType.interface.copyWith(
+                  fontSize: 13,
+                  color: selected
+                      ? AppColors.surfacePrimary
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -448,17 +506,19 @@ class ResultCard extends StatelessWidget {
                     Text(
                       'Personal Match',
                       style: AppType.display.copyWith(
-                        fontSize: 20,
+                        fontSize: 22,
+                        letterSpacing: 0.2,
                         color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.half),
                     Text(
                       _contextLine,
-                      style: AppType.interface.copyWith(
-                        fontSize: 13,
-                        height: 1.4,
-                        color: AppColors.textSecondary,
+                      style: AppType.data.copyWith(
+                        fontSize: 11,
+                        height: 1.5,
+                        letterSpacing: 0.4,
+                        color: AppColors.textTertiary,
                       ),
                     ),
                   ],
@@ -608,19 +668,10 @@ class ResultCard extends StatelessWidget {
   }
 
   Widget _actionButton(String label, VoidCallback onTap) {
-    return SizedBox(
-      height: AppSpacing.minTapTarget,
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: AppColors.borderSubtle),
-          foregroundColor: AppColors.textPrimary,
-        ),
-        onPressed: onTap,
-        child: Text(
-          label,
-          style: AppType.interface.copyWith(fontSize: 12, letterSpacing: 1.2),
-        ),
-      ),
+    return AtelierButton(
+      label: label,
+      onPressed: onTap,
+      variant: AtelierButtonVariant.secondary,
     );
   }
 
@@ -739,8 +790,8 @@ class _ScoreRing extends StatelessWidget {
         child: Center(
           child: Text(
             score.toStringAsFixed(0),
-            style: AppType.data.copyWith(
-              fontSize: 22,
+            style: AppType.display.copyWith(
+              fontSize: 24,
               color: AppColors.textPrimary,
             ),
           ),

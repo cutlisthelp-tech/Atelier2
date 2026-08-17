@@ -7,6 +7,7 @@ import '../../models/search.dart';
 import '../../services/backend_client.dart';
 import '../../services/local_store.dart';
 import '../../theme/tokens.dart';
+import '../widgets/atelier_button.dart';
 import '../widgets/empty_state.dart';
 import 'garment_scan_screen.dart';
 import 'home_screen.dart';
@@ -310,20 +311,29 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
         padding: const EdgeInsets.all(AppSpacing.unit * 3),
         children: [
           Text(
-            'Wardrobe',
-            style: AppType.display.copyWith(
-              fontSize: 28,
-              color: AppColors.textPrimary,
+            'WARDROBE',
+            style: AppType.caption.copyWith(
+              fontSize: 10,
+              letterSpacing: 2.4,
+              color: AppColors.spotlightGold,
             ),
           ),
           const SizedBox(height: AppSpacing.unit),
+          Text(
+            'Wardrobe',
+            style: AppType.displayXL.copyWith(
+              fontSize: 38,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.half),
           Text(
             'Analysis data only — photos of your clothes never leave the '
             'capture flow and are never stored.',
             style: AppType.interface.copyWith(
               fontSize: 13,
               height: 1.5,
-              color: AppColors.textSecondary,
+              color: AppColors.textTertiary,
             ),
           ),
           const SizedBox(height: AppSpacing.unit * 2),
@@ -332,49 +342,46 @@ class _WardrobeScreenState extends State<WardrobeScreen> {
             spacing: AppSpacing.unit,
             runSpacing: AppSpacing.unit,
             children: [
-              SizedBox(
-                height: AppSpacing.minTapTarget,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.textPrimary,
-                    foregroundColor: AppColors.surfacePrimary,
-                  ),
-                  onPressed: _openScanner,
-                  icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                  label: Text(
-                    'Camera',
-                    style: AppType.interface.copyWith(fontSize: 14),
-                  ),
-                ),
+              AtelierButton(
+                label: 'Camera',
+                icon: Icons.photo_camera_outlined,
+                fullWidth: false,
+                onPressed: _openScanner,
               ),
-              SizedBox(
-                height: AppSpacing.minTapTarget,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: AppColors.borderSubtle),
-                    foregroundColor: AppColors.textPrimary,
-                  ),
-                  onPressed: () => _addFrom(ImageSource.gallery),
-                  child: Text(
-                    'Choose file',
-                    style: AppType.interface.copyWith(fontSize: 14),
-                  ),
-                ),
+              AtelierButton(
+                label: 'Choose file',
+                variant: AtelierButtonVariant.secondary,
+                fullWidth: false,
+                onPressed: () => _addFrom(ImageSource.gallery),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.unit * 2),
           if (items.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.unit * 2),
-              child: Text(
-                'Your wardrobe is empty. Photograph what you own and Atelier '
-                'reads each piece — category, colors, pattern, fit, material.',
-                style: AppType.interface.copyWith(
-                  fontSize: 14,
-                  height: 1.5,
-                  color: AppColors.textSecondary,
-                ),
+            GlassSurface(
+              padding: const EdgeInsets.all(AppSpacing.unit * 3),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your wardrobe starts here.',
+                    style: AppType.headline.copyWith(
+                      fontSize: 22,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.unit),
+                  Text(
+                    'Your wardrobe is empty. Photograph what you own and '
+                    'Atelier reads each piece — category, colors, pattern, '
+                    'fit, material.',
+                    style: AppType.interface.copyWith(
+                      fontSize: 14,
+                      height: 1.55,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             )
           else ...[
