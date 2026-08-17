@@ -1,0 +1,304 @@
+<style>
+  :root{
+    --ink:#16161B; --graphite:#2A2A31; --bone:#F5F3EE; --fog:#C7C6C9;
+    --gold:#B99A5B; --red:#C0453A;
+    --glass:rgba(42,42,49,.66); --hairline:rgba(245,243,238,.08);
+    --display:Georgia,'Times New Roman',serif;
+    --ui:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --data:'SF Mono','Cascadia Code','Roboto Mono',Menlo,Consolas,monospace;
+  }
+  .page{max-width:1180px;margin:0 auto;padding:40px 24px 80px;font-family:var(--ui);color:var(--ink);line-height:1.5}
+  .kicker{font-family:var(--data);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#6f6e72;margin:0 0 10px}
+  h1.display{font-family:var(--display);font-size:clamp(34px,5vw,52px);font-weight:400;margin:0 0 8px;letter-spacing:-.01em}
+  .lede{max-width:64ch;color:#3c3b40;margin:0 0 18px}
+  .banner{border:1px solid rgba(185,154,91,.5);background:rgba(185,154,91,.10);padding:12px 16px;border-radius:10px;font-size:13px;max-width:80ch}
+  .banner b{font-family:var(--data);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+  section{margin-top:56px}
+  h2{font-family:var(--display);font-weight:400;font-size:26px;margin:0 0 4px}
+  .sub{color:#55545a;margin:0 0 22px;max-width:80ch}
+  .screens{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+  .phonecol{flex:0 1 auto}
+  .phlabel{font-family:var(--data);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6f6e72;margin:12px 4px 0;text-align:center}
+  .phone{width:308px;border-radius:38px;background:
+      radial-gradient(120% 60% at 80% -10%,rgba(185,154,91,.16),transparent 55%),
+      radial-gradient(90% 50% at 10% 108%,rgba(199,198,201,.10),transparent 60%),
+      var(--ink);
+    color:var(--bone);padding:22px 18px 20px;border:1px solid #000;box-shadow:0 18px 40px rgba(22,22,27,.25)}
+  .toprow{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .back{color:var(--fog);font-size:18px}
+  .title{font-size:15px;font-weight:600}
+  .step{font-family:var(--data);font-size:11px;color:var(--fog)}
+  .chip{display:flex;gap:10px;align-items:center;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--hairline);border-radius:14px;padding:10px;margin-bottom:14px}
+  .thumb{width:46px;height:46px;border-radius:10px;background:var(--graphite);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .chip .t1{font-size:13px}
+  .chip .t2{font-family:var(--data);font-size:10.5px;color:var(--fog)}
+  .guide{font-size:14px;color:var(--bone);margin:0 2px 12px}
+  .guide em{color:var(--gold);font-style:normal}
+  .glasscard{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--hairline);border-radius:16px;padding:16px;margin-bottom:14px}
+  .mlabel{font-family:var(--data);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-bottom:10px}
+  .inputrow{display:flex;align-items:baseline;gap:8px;border-bottom:1px solid rgba(199,198,201,.25);padding:6px 2px 8px}
+  .inputrow .val{font-family:var(--data);font-size:30px}
+  .inputrow .unit{font-family:var(--data);font-size:13px;color:var(--fog)}
+  .dots{display:flex;gap:8px;justify-content:center;margin:4px 0 14px}
+  .dot{width:7px;height:7px;border-radius:50%;background:rgba(199,198,201,.28)}
+  .dot.done{background:var(--fog)} .dot.now{background:var(--gold);box-shadow:0 0 0 4px rgba(185,154,91,.18)}
+  .btn{display:flex;align-items:center;justify-content:center;min-height:46px;border-radius:13px;font-size:15px;font-weight:600;width:100%}
+  .btn.gold{background:var(--gold);color:var(--ink)}
+  .btn.quiet{background:transparent;border:1px solid rgba(199,198,201,.35);color:var(--bone);font-weight:500}
+  .btn.ghost{color:var(--fog);font-size:13px;min-height:36px}
+  .foot{font-size:11px;color:#8a898e;text-align:center;margin-top:12px;line-height:1.45}
+  .table{width:100%;border-collapse:collapse;font-family:var(--data);font-size:12px}
+  .table th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--fog);text-align:left;padding:6px 8px;border-bottom:1px solid rgba(199,198,201,.22);font-weight:500}
+  .table td{padding:7px 8px;border-bottom:1px solid rgba(199,198,201,.10)}
+  .prov{display:inline-flex;gap:6px;align-items:center;font-family:var(--data);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(185,154,91,.4);border-radius:999px;padding:4px 10px;margin-bottom:12px}
+  .linkfield{background:rgba(22,22,27,.5);border:1px solid rgba(199,198,201,.25);border-radius:12px;padding:11px 12px;font-family:var(--data);font-size:11px;color:var(--fog);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:10px}
+  .quietcard{background:rgba(42,42,49,.4);border:1px solid var(--hairline);border-radius:16px;padding:20px 16px;margin:6px 0 14px}
+  .quietcard h3{margin:0 0 8px;font-size:16px}
+  .quietcard p{margin:0 0 16px;font-size:13px;color:var(--fog);line-height:1.5}
+  .ring{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+  .ring svg{flex:0 0 auto}
+  .ring .rv{font-family:var(--data);font-size:30px;line-height:1}
+  .ring .rl{font-size:11px;color:var(--fog);font-family:var(--data);letter-spacing:.08em;text-transform:uppercase}
+  .ctx{font-size:13px;color:var(--bone);margin-bottom:12px}
+  .why{margin:0 0 14px;padding:0;list-style:none}
+  .why li{font-size:12.5px;color:var(--fog);padding:7px 0 7px 18px;position:relative;border-bottom:1px solid rgba(199,198,201,.08)}
+  .why li:before{content:"—";position:absolute;left:0;color:var(--gold)}
+  .sechead{font-family:var(--data);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin:0 2px 10px}
+  .trend{font-size:13.5px;color:var(--bone);margin:0 0 8px;line-height:1.45}
+  .src{font-family:var(--data);font-size:10px;color:#8a898e;letter-spacing:.08em}
+  .notes{flex:1 1 300px;min-width:280px}
+  .notes h4{font-family:var(--data);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6f6e72;margin:0 0 10px}
+  .notes ul{margin:0;padding:0;list-style:none}
+  .notes li{font-size:13.5px;color:#3c3b40;padding:7px 0 7px 20px;position:relative;border-bottom:1px solid rgba(22,22,27,.07)}
+  .notes li:before{content:"·";position:absolute;left:6px;color:var(--gold);font-weight:700}
+  .notes code,.decisions code{font-family:var(--data);font-size:11.5px;background:rgba(22,22,27,.07);padding:1px 5px;border-radius:4px}
+  .flowmap{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;background:var(--ink);color:var(--bone);border-radius:16px;padding:20px;overflow-x:auto}
+  .fstep{background:var(--glass);border:1px solid var(--hairline);border-radius:12px;padding:10px 14px;min-width:130px;flex:0 0 auto}
+  .fstep .n{font-family:var(--data);font-size:10px;color:var(--gold);letter-spacing:.12em}
+  .fstep .d{font-size:12.5px;margin-top:4px;line-height:1.4}
+  .farrow{align-self:center;color:var(--fog);flex:0 0 auto}
+  .decisions{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+  .dec{border:1px solid rgba(22,22,27,.1);border-radius:12px;padding:16px 18px;background:#fbfaf7}
+  .dec .dn{font-family:var(--data);font-size:10.5px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase}
+  .dec h3{margin:6px 0;font-size:15.5px;font-weight:600}
+  .dec p{margin:0;font-size:13px;color:#4a494e;line-height:1.5}
+  .open{border-left:3px solid var(--gold);background:#fbfaf7;border-radius:0 12px 12px 0;padding:14px 18px;margin-bottom:12px}
+  .open h3{margin:0 0 4px;font-size:14.5px;font-weight:600}
+  .open p{margin:0;font-size:13px;color:#4a494e;line-height:1.5}
+  footer{margin-top:64px;font-family:var(--data);font-size:11px;color:#8a898e;letter-spacing:.06em}
+</style>
+
+<div class="page">
+
+  <p class="kicker">Atelier · Design Exploration · 2026-08-17 — not a phase, no backend, no API calls</p>
+  <h1 class="display">Fit Intelligence Flow</h1>
+  <p class="lede">Garment photo → assistant-guided measurement gathering → deterministic fit. Product link → read-only size-chart capture. Best-outfit trend slot fed by a defined-later data source. Rendered with Atelier Glass tokens.</p>
+  <div class="banner"><b>Sample content</b> — every number, value and URL below is illustrative placeholder for judging layout, hierarchy and voice. Nothing here is real data, and none of it may ship as-is (No-Fake-Data Doctrine, PRODUCT_SPEC §12).</div>
+
+  <section>
+    <h2>Interaction flow</h2>
+    <p class="sub">The assistant's intelligence is hidden: it decides <i>what to ask next</i> and writes the one-line guidance. The surface is always structured input — never a chat thread (product identity, AGENTS.md). Fit is computed by the deterministic size engine (§8), never by the LLM.</p>
+    <div class="flowmap">
+      <div class="fstep"><div class="n">A1</div><div class="d">Garment photo uploaded</div></div>
+      <div class="farrow">→</div>
+      <div class="fstep"><div class="n">A2</div><div class="d">Category detected (existing Phase 2 pipeline)</div></div>
+      <div class="farrow">→</div>
+      <div class="fstep"><div class="n">A3</div><div class="d">Guided gathering: height + garment measurements, one card at a time</div></div>
+      <div class="farrow">→</div>
+      <div class="fstep"><div class="n">A4</div><div class="d">Deterministic fit engine → verdict + confidence, honest gaps</div></div>
+      <div class="farrow" style="flex-basis:100%;height:0"></div>
+      <div class="fstep"><div class="n">B1</div><div class="d">Product link pasted</div></div>
+      <div class="farrow">→</div>
+      <div class="fstep"><div class="n">B2</div><div class="d">Read page — extract only printed chart values</div></div>
+      <div class="farrow">→</div>
+      <div class="fstep"><div class="n">B3a</div><div class="d">Found → chart with provenance → feeds fit engine</div></div>
+      <div class="farrow">/</div>
+      <div class="fstep"><div class="n">B3b</div><div class="d">Not found → honest <span style="font-family:var(--data);font-size:11px">NO_SIZE_CHART</span> → measure manually or skip</div></div>
+      <div class="farrow" style="flex-basis:100%;height:0"></div>
+      <div class="fstep"><div class="n">C</div><div class="d">Best-outfit trend slot ← indexed trend source (defined later). No live web search per request.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Screen 1 — Fit check · guided gathering</h2>
+    <p class="sub">Conversational intelligence, visual surface. The assistant picks the next question for this garment category and writes one plain-language line; the user answers through a real input with a where-to-measure diagram. Skipping is a first-class action — a skipped measurement becomes an honest <i>not scored</i>, never a guess (Phase 5 precedent).</p>
+    <div class="screens">
+      <div class="phonecol">
+        <div class="phone">
+          <div class="toprow"><span class="back">‹</span><span class="title">Fit check</span><span class="step">2 / 4</span></div>
+          <div class="chip">
+            <div class="thumb">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M9 5 L5 8 L7 12 L9 10.5 L9 23 L19 23 L19 10.5 L21 12 L23 8 L19 5 L16.5 6.5 A2.5 2.5 0 0 1 11.5 6.5 Z" stroke="#C7C6C9" stroke-width="1.4" stroke-linejoin="round"/></svg>
+            </div>
+            <div><div class="t1">Detected: Jacket</div><div class="t2">category 0.83 · sample</div></div>
+          </div>
+          <p class="guide">Jackets live or die by the shoulders. <em>Measure across the back, seam to seam.</em></p>
+          <div class="glasscard">
+            <div class="mlabel">Shoulder width</div>
+            <svg width="100%" height="64" viewBox="0 0 260 64" fill="none" style="margin-bottom:10px">
+              <path d="M90 8 L50 20 L62 44 L88 36 L88 60 L172 60 L172 36 L198 44 L210 20 L170 8 L152 14 A22 22 0 0 1 108 14 Z" stroke="rgba(199,198,201,.5)" stroke-width="1.6" stroke-linejoin="round"/>
+              <line x1="90" y1="16" x2="170" y2="16" stroke="#B99A5B" stroke-width="2"/>
+              <path d="M90 12 v8 M170 12 v8" stroke="#B99A5B" stroke-width="2"/>
+              <text x="130" y="32" fill="#B99A5B" font-size="9" text-anchor="middle" font-family="monospace">seam → seam</text>
+            </svg>
+            <div class="inputrow"><span class="val">44.5</span><span class="unit">cm</span></div>
+          </div>
+          <div class="dots"><span class="dot done"></span><span class="dot now"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="btn gold">Continue</div>
+          <div style="height:8px"></div>
+          <div class="btn quiet">I don't have this number</div>
+          <p class="foot">Measured by you. Guidance adapts to the garment.<br>Fit is computed by the size engine — never by the assistant.</p>
+        </div>
+        <div class="phlabel">Guided gathering — one question, real input</div>
+      </div>
+      <div class="notes">
+        <h4>Interaction notes</h4>
+        <ul>
+          <li>The gold guidance line is the only LLM-authored text on screen — hidden prompt, visible as plain help. No bubbles, no transcript.</li>
+          <li>Question order adapts to the detected category (jacket → shoulders first; trousers → waist/inseam). Without an LLM provider, a deterministic per-category list renders instead — the flow never dead-ends.</li>
+          <li>Inputs are Data-typeface (monospace): the eye reads "real number," per DESIGN_SYSTEM §2.</li>
+          <li><i>I don't have this number</i> records an honest null; that region later shows "not measurable," exactly like Phase 5's chest/waist handling.</li>
+          <li>Skeleton state while the assistant picks the next card — no fake progress animation (§4 rule).</li>
+          <li>All targets ≥ 44pt; Reduced Motion collapses the card transitions to immediate swaps.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Screen 2 — Size chart from a product link</h2>
+    <p class="sub">The assistant may only <b>read</b> what is explicitly printed on the page. Found values render with provenance; a missing chart is a quiet, honest state — never a guessed table.</p>
+    <div class="screens">
+      <div class="phonecol">
+        <div class="phone">
+          <div class="toprow"><span class="back">‹</span><span class="title">Size chart</span><span class="step">link</span></div>
+          <div class="linkfield">https://shop.example/products/wool-jacket</div>
+          <div class="btn quiet" style="margin-bottom:16px">Read size chart</div>
+          <span class="prov">● Read from page · today</span>
+          <div class="glasscard">
+            <table class="table">
+              <tr><th>Size</th><th>Chest (cm)</th><th>Length (cm)</th></tr>
+              <tr><td>S</td><td>52</td><td>68</td></tr>
+              <tr><td>M</td><td>54</td><td>70</td></tr>
+              <tr><td>L</td><td>56</td><td>72</td></tr>
+            </table>
+          </div>
+          <p class="foot" style="text-align:left;margin:0 2px 14px">As printed on the page. Nothing estimated, nothing filled in.</p>
+          <div class="btn gold">Use this chart</div>
+          <div class="btn ghost">Not the right chart? Paste another link</div>
+        </div>
+        <div class="phlabel">State: chart found — values with provenance</div>
+      </div>
+      <div class="phonecol">
+        <div class="phone">
+          <div class="toprow"><span class="back">‹</span><span class="title">Size chart</span><span class="step">link</span></div>
+          <div class="linkfield">https://shop.example/products/linen-shirt</div>
+          <div class="btn quiet" style="margin-bottom:16px">Read size chart</div>
+          <div class="quietcard">
+            <h3>No size chart on this page.</h3>
+            <p>We read the page and found no measurement table. We never guess numbers that aren't written down.</p>
+            <div class="btn gold" style="margin-bottom:8px">Measure it yourself</div>
+            <div class="btn quiet">Skip fit check</div>
+          </div>
+          <p class="foot">Honest state per §12 — the fit check stays available through your own measurements.</p>
+        </div>
+        <div class="phlabel">State: not found — NO_SIZE_CHART, quiet voice</div>
+      </div>
+      <div class="notes">
+        <h4>Interaction notes</h4>
+        <ul>
+          <li>Provenance chip names the source and the read date — every value must be traceable to the page.</li>
+          <li>Only columns that exist on the page render. A chart with chest-only data shows chest-only; absent dimensions are absent, not inferred.</li>
+          <li>Not-found is quiet (Fog/Ink), not Signal Red — it's an honest fork, not an error (§2: red is for hard failure only).</li>
+          <li><i>Measure it yourself</i> routes into Screen 1's guided gathering for this garment category.</li>
+          <li>While reading: skeleton rows, then the real result — if the read stalls, say so plainly (§6 voice).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Screen 3 — Best outfit · trend slot</h2>
+    <p class="sub">No live web search per request. The trend section renders whatever the (defined-later) indexed trend source provides — or renders honestly inactive, exactly like the ranking engine's Trend factor does today when it has no feed.</p>
+    <div class="screens">
+      <div class="phonecol">
+        <div class="phone">
+          <div class="toprow"><span class="back">‹</span><span class="title">Your Best Look</span><span class="step">home</span></div>
+          <div class="glasscard">
+            <div class="ring">
+              <svg width="62" height="62" viewBox="0 0 62 62">
+                <circle cx="31" cy="31" r="26" stroke="rgba(199,198,201,.18)" stroke-width="5" fill="none"/>
+                <circle cx="31" cy="31" r="26" stroke="#B99A5B" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="142 163" transform="rotate(-90 31 31)"/>
+              </svg>
+              <div><div class="rv">87</div><div class="rl">Personal match · sample</div></div>
+            </div>
+            <div class="ctx">Perfect for: Dinner · Tonight · Casablanca</div>
+            <ul class="why">
+              <li>Shoulders match your scan — no gap, no pull</li>
+              <li>Warm layer for a cool evening</li>
+            </ul>
+            <div class="sechead">Style right now</div>
+            <p class="trend">Relaxed tailoring is having a moment — this look leans into it.</p>
+            <div class="src">SOURCE: TREND_FEED (name TBD) · REFRESHED WEEKLY · trend factor +contribution shown in Why-it-works</div>
+          </div>
+          <div class="btn gold">Try on</div>
+        </div>
+        <div class="phlabel">State: trend source connected</div>
+      </div>
+      <div class="phonecol">
+        <div class="phone">
+          <div class="toprow"><span class="back">‹</span><span class="title">Your Best Look</span><span class="step">home</span></div>
+          <div class="glasscard">
+            <div class="ring">
+              <svg width="62" height="62" viewBox="0 0 62 62">
+                <circle cx="31" cy="31" r="26" stroke="rgba(199,198,201,.18)" stroke-width="5" fill="none"/>
+                <circle cx="31" cy="31" r="26" stroke="#B99A5B" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="142 163" transform="rotate(-90 31 31)"/>
+              </svg>
+              <div><div class="rv">87</div><div class="rl">Personal match · sample</div></div>
+            </div>
+            <div class="ctx">Perfect for: Dinner · Tonight · Casablanca</div>
+            <ul class="why">
+              <li>Shoulders match your scan — no gap, no pull</li>
+              <li>Warm layer for a cool evening</li>
+            </ul>
+            <div class="sechead">Style right now</div>
+            <p class="trend" style="color:var(--fog)">Trend context isn't connected yet.</p>
+            <div class="src">SCORED ON FIT · WEATHER · OCCASION · YOUR STYLE PROFILE — NOTHING GUESSED</div>
+          </div>
+          <div class="btn gold">Try on</div>
+        </div>
+        <div class="phlabel">State: trend source not connected</div>
+      </div>
+      <div class="notes">
+        <h4>Interaction notes</h4>
+        <ul>
+          <li>The trend slot is a consumer of a pre-indexed source — fetched like weather, never searched live per request (latency + unbounded-cost guardrails).</li>
+          <li>When active, trend influence must appear as a real score component in Why-it-works (§6 explainability) — never as vague "trending" decoration.</li>
+          <li>When inactive, the section names what IS scoring the outfit. Same pattern as Phase 3's honest inactive-factor reporting.</li>
+          <li>Attribution check: this data source is the deferred <b>Phase 3 Trend factor</b> feed — Phase 6 already shipped as weather + occasion depth.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Design decisions baked into these screens</h2>
+    <div class="decisions">
+      <div class="dec"><div class="dn">D1</div><h3>Conversational intelligence, not chat UI</h3><p>The assistant decides what to ask next and writes one guidance line. The surface stays structured input — fields, diagrams, progress. No thread, no bubbles: Atelier is a visual app (AGENTS.md product identity).</p></div>
+      <div class="dec"><div class="dn">D2</div><h3>The LLM asks and explains — never computes</h3><p>Fit comes from the deterministic size engine (PRODUCT_SPEC §8, Phase 5 lineage). The LLM may not output measurements, scores, or confidence values — that boundary is constitutional (AGENTS.md rule 5).</p></div>
+      <div class="dec"><div class="dn">D3</div><h3>Link reading is read-only extraction</h3><p>Only explicitly printed chart values surface, with provenance + freshness. No chart → <code>NO_SIZE_CHART</code> (§12), stated plainly. Estimation is a prohibited act, not an edge case.</p></div>
+      <div class="dec"><div class="dn">D4</div><h3>Trends from an indexed source</h3><p>No per-request live web search. The slot renders source data with attribution, or renders honestly inactive until the source and its schema are defined.</p></div>
+      <div class="dec"><div class="dn">D5</div><h3>Every state drawn, including the empty ones</h3><p>Not-found, not-measured, and not-connected are designed frames, not afterthoughts. Glass and motion never mask waiting (§3, §4).</p></div>
+      <div class="dec"><div class="dn">D6</div><h3>Tokens as specified</h3><p>Ink canvas, Graphite glass at ~66% over 20px blur with 1px Fog hairlines, Spotlight Gold reserved for CTA + match ring + active progress, Data typeface on every number, ≥44pt targets.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Open questions before any implementation</h2>
+    <div class="open"><h3>Gemini requires an externally issued key — conflicts with the standing keyless directive</h3><p>Recorded 2026-08-17: no phase may depend on externally issued keys. The flow above is therefore designed provider-agnostic — with no LLM provider configured, gathering falls back to the deterministic per-category question list (works, just non-adaptive), and link-reading stays unavailable with an honest state. Gemini can slot in later if a key is ever provided on your own initiative; the UI doesn't change.</p></div>
+    <div class="open"><h3>Trend source contract</h3><p>Source, schema, and freshness cadence are undefined (Phase 3 deferred Trend factor). Screen 3's connected state assumes at minimum: a headline signal, attribution name, and refresh timestamp.</p></div>
+    <div class="open"><h3>Sample content boundary</h3><p>Everything on this page is illustrative. Any real build reverts to the doctrine: real analyses, real charts, honest nulls — the mockup's job is layout, hierarchy, and voice only.</p></div>
+  </section>
+
+  <footer>ATELIER · FIT INTELLIGENCE FLOW · DESIGN EXPLORATION · ATELIER GLASS TOKENS · NO BACKEND TOUCHED</footer>
+</div>
