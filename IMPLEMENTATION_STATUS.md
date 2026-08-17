@@ -393,6 +393,63 @@ Honest limits of this verification:
   (not in Phase 8's BUILD_PLAN scope).
 - Merchant search tiers stay unconnected until a licensed catalog exists.
 
+## Fit Flow — guided fit check (wired to the Phase 5 size engine)
+
+**Status: VERIFIED — 2026-08-17**
+
+Approved as a standalone frontend phase (not part of the original 0–10
+roadmap): convert the labeled design exploration
+(`design-exploration-fit-flow.html`) into a real screen that calls the
+already-verified Phase 5 engine — no new backend logic, no sample content.
+
+Definition of Done: *a real Phase 1 body profile + a real user-copied size
+chart return a real size + confidence via POST /size/recommend, or an honest
+§12 failure — no hardcoded samples, no empty handlers.*
+
+Evidence:
+
+- `fit_flow_screen.dart` replaces `fit_flow_preview_screen.dart` in place:
+  the SAMPLE banner, the hardcoded chart/measurements, the unwired "read size
+  chart from a link" section, and the trend-slot sample are all dropped; what
+  remains calls the real engine. Gathering stays a deterministic, guided flow
+  — no LLM provider is called or required. Category, fit scale and result
+  rendering reuse `SizeCheckScreen.categories`, `.cmFields` and
+  `SizeResultView`, so taxonomy and output can't drift from Phase 5.
+- Honest states wired end-to-end: no stored body scan → the plain
+  prerequisite ("Atelier hasn't measured you yet…"); storage unavailable →
+  stated plainly; fewer than two chart rows → caught before any network call;
+  `NO_SIZE_CHART` / `INSUFFICIENT_DATA` surfaced from the engine envelope;
+  unconfigured backend → `NETWORK_ERROR`.
+- `flutter analyze` — no issues. `flutter test` — 44/44 passed (five new wired
+  Fit-Flow tests replace the two preview tests).
+- Backend unchanged and live: real fixture photo → `/analysis/body` → real
+  BodyProfile (shoulder 33.7 / hip 22.9 / arm 46.2, chest honestly null,
+  confidence 0.757); that body + a chart built at the real measurements →
+  `/size/recommend` → size **S**, confidence 0.675, per-region honesty
+  (`chest not_measurable`, `shoulder matched`, `sleeve not_provided`). Same
+  JSON shape the app sends.
+- Design compliance applied: 44pt tap targets on chips and the segmented
+  control (DESIGN_SYSTEM §2), all numbers in the Data/monospace typeface,
+  Spotlight Gold reserved for the primary CTA.
+
+Honest limits of this verification:
+
+- Camera capture is unavailable in this codespace (no physical camera); the
+  body-scan step states "The camera could not be started." Real capture stays
+  the maintainer's Android/Termux flow, and the engine path is verified
+  end-to-end from a real photo through the same endpoint the screen calls
+  (consistent with Phases 1–4).
+- The "read size chart from a product link" capability was dropped from this
+  screen (no backend reader exists); the chart is user-copied, exactly as the
+  Phase 5 contract. Auto-reading a chart and auto-detecting category/fit from
+  a garment photo are deferred.
+- Chest/waist remain null by design and are listed, never guessed (Phase 5
+  doctrine).
+- Observed during E2E but pre-existing and out of scope here: on web the
+  Diagnostics screen throws on `Platform.isAndroid`, and its 3 s `/health`
+  probe can lose the cold-start race while `/models` and the size POST
+  succeed.
+
 ## Phases 9–10
 
 Not started. No feature flags are enabled.

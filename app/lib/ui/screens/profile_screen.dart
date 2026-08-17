@@ -9,7 +9,7 @@ import 'body_scan_screen.dart';
 import 'consent_screen.dart';
 import 'design_preview_screen.dart';
 import 'diagnostics_screen.dart';
-import 'fit_flow_preview_screen.dart';
+import 'fit_flow_screen.dart';
 import 'size_check_screen.dart';
 import 'style_profile_screen.dart';
 
@@ -153,11 +153,15 @@ class ProfileScreen extends StatelessWidget {
           ),
           _entry(
             context,
-            title: 'Fit flow preview',
-            subtitle: 'Developer — gathering, chart states, trend slot (sample)',
+            title: 'Fit check',
+            subtitle: 'Guided fit from your body scan and a real size chart',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => const FitFlowPreviewScreen(),
+                builder: (_) => FitFlowScreen(
+                  backendClient: backendClient,
+                  bodyStore: bodyStore,
+                  sessionStorage: sessionStorage,
+                ),
               ),
             ),
           ),
